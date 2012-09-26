@@ -21,9 +21,55 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <cstring>
 
+static uint8_t* DecodeRLEFrame(int width, int height, std::istream &inStream)
+{
+	uint8_t* outputBytes = new uint8_t[width*height];
+	int x = 0;
+	auto streamOffset = inStream.tellg();
 
-FLCChunk *loadChunk(std::istream &inStream)
+	for (int y = 0; y < height; y++)
+	{
+		std::cout << "y = " << y << std::endl;
+		char *outLine = new char[width];
+		//First byte is skipped;
+		inStream.seekg(1, std::ios::cur);
+		while (x < width)
+		{
+			std::cout << "x = " << x << std::endl;
+			char count;
+			inStream.read(&count, 1);
+			if (count < 0)
+			{
+				int copyBytes = -count;
+				std::cout << "Copying " << copyBytes << " bytes\n";
+				inStream.read((char*)outLine+x, copyBytes);
+				x += copyBytes;
+			}
+			else
+			{
+				int replicateCount = count;
+				char replicateData;
+				inStream.read(&replicateData, 1);
+				std::cout << "Replicating " << replicateCount << " bytes\n";
+				for (int i = 0; i < replicateCount; i++)
+				{
+					outLine[x] = replicateData;
+					x++;
+				}
+			}
+		}
+		memcpy(outputBytes+(width*y), outLine, width);
+		x = 0;
+	}
+
+	std::cout << "Read " << (inStream.tellg()-streamOffset) << " bytes\n";
+
+	return outputBytes;
+}
+
+FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 {
 	FLCChunkHeader header;
 	FLCChunk *chunk;
@@ -47,10 +93,13 @@ FLCChunk *loadChunk(std::istream &inStream)
 			chunk = new FLCTFTDAudioChunk(header.size, inStream);
 			break;
 		case CT_FRAME:
-			chunk = new FLCFrameTypeChunk(header.size, inStream);
+			chunk = new FLCFrameTypeChunk(header.size, inStream, imageWidth, imageHeight);
 			break;
 		case CT_COLOR_256:
 			chunk = new FLCChunkColor256(header.size, inStream);
+			break;
+		case CT_BYTE_RUN:
+			chunk = new FLCImageChunk(imageWidth, imageHeight, DecodeRLEFrame(imageWidth, imageHeight, inStream));
 			break;
 		default:
 			std::cout << "TODO: Other chunk types?\n";
@@ -74,7 +123,7 @@ FLCTFTDAudioChunk::FLCTFTDAudioChunk(size_t size, std::istream &inStream)
 	inStream.read(this->sampleValues.get(), size);
 }
 
-FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream)
+FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream, int videoWidth, int videoHeight)
 	:	FLCChunk(CT_FRAME, size)
 {
 	//Frame chunks contain subchunks after an extra header
@@ -87,9 +136,12 @@ FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream)
 	
 	this->subChunks.resize(3);
 
+	int frameWidth = (this->frameHeader.widthOverride) ? this->frameHeader.widthOverride : videoWidth;
+	int frameHeight = (this->frameHeader.widthOverride) ? this->frameHeader.widthOverride : videoHeight;
+
 	for (int chunk = 0; chunk < this->frameHeader.chunks; chunk++)
 	{
-		this->subChunks[chunk] = loadChunk(inStream);
+		this->subChunks[chunk] = loadChunk(inStream, frameWidth, frameHeight);
 	}
 }
 
@@ -155,7 +207,7 @@ int main(int argc, char **argv)
 
 	while (inFile.good() || !inFile.eof())
 	{
-		loadChunk(inFile);
+		loadChunk(inFile, flc.header.width, flc.header.height);
 	}
 
 

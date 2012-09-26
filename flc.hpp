@@ -61,6 +61,7 @@ enum FLCChunkType
 	CT_SEGMENT_TABLE,
 	CT_HUFFMAN_TABLE,
 	CT_TFTD_AUDIO,
+	CT_DECODED_IMAGE,
 };
 
 std::map<uint32_t, FLCChunkType> ChunkIDMap
@@ -132,6 +133,7 @@ std::map<FLCChunkType, std::string> ChunkNameMap
 	{CT_SEGMENT_TABLE,"CT_SEGMENT_TABLE"},
 	{CT_HUFFMAN_TABLE,"CT_HUFFMAN_TABLE"},
 	{CT_TFTD_AUDIO,   "CT_TFTD_AUDIO"},
+	{CT_DECODED_IMAGE,"CT_DECODED_IMAGE"},
 };
 
 class FLCChunkHeader
@@ -155,7 +157,7 @@ public:
 class FLCFrameTypeChunk : public FLCChunk
 {
 public:
-	FLCFrameTypeChunk(size_t size, std::istream &inStream);
+	FLCFrameTypeChunk(size_t size, std::istream &inStream, int videoWidth, int videoHeight);
 	class
 	{
 	public:
@@ -193,6 +195,16 @@ public:
 	FLCChunkColor256(size_t size, std::istream &inStream);
 	uint16_t packetCount;
 	ktftd::img::RGBColor palette[256];
+};
+
+//Not a FLC chunk as such - but a decoded full image
+class FLCImageChunk : public FLCChunk
+{
+public:
+	FLCImageChunk(int width, int height, uint8_t data[]) : width(width),height(height),data(data){}
+	int width;
+	int height;
+	std::unique_ptr<uint8_t[]> data;
 };
 
 class SegmentTable
