@@ -47,6 +47,7 @@ namespace img
 	class Image
 	{
 	public:
+		Image(){};
 		Image(uint32_t sizeX, uint32_t sizeY) : sizeX(sizeX),sizeY(sizeY),data(new RGBAColor[sizeX*sizeY]){};
 		uint32_t sizeX, sizeY;
 		std::unique_ptr<RGBAColor[]> data;
@@ -66,6 +67,7 @@ namespace img
 	class PaletteImage
 	{
 	public:
+		PaletteImage(){}
 		PaletteImage(uint32_t sizeX, uint32_t sizeY) : sizeX(sizeX),sizeY(sizeY),data(new uint8_t[sizeX*sizeY])
 		{
 		}

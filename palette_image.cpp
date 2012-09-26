@@ -33,6 +33,7 @@ namespace img
 	{
 		Palette palette;
 
+		//256 RGB values, with a 6 byte stub at the end (No idea what is it used for)
 		inStream.seekg((256*3+6)*paletteNo, std::ios::beg);
 
 		assert(inStream.good());

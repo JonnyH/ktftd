@@ -9,6 +9,8 @@ set(TFTPIMG_SOURCE_FILES
 				img.cpp
 				lbm.cpp
 				spk.cpp
+				scr.cpp
+				bdy.cpp
 				palette_image.cpp
 				)
 

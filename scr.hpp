@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  lbm.cpp
+ *       Filename:  scr.hpp
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  26/09/12 09:53:45
+ *        Created:  26/09/12 11:15:57
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,19 +16,19 @@
  * =====================================================================================
  */
 
-#include "lbm.hpp"
+#ifndef __SCR_HPP
+#define __SCR_HPP
 
-#include <cassert>
+#include <iostream>
+
+#include "palette_image.hpp"
 
 namespace ktftp
 {
 namespace img
 {
-
-	Image LoadLBMImage(std::istream& inStream)
-	{
-		assert(0 && "LBM loading unimplemented");	
-	}
-
+	PaletteImage LoadSCRImage(std::istream &inStream);
 }//namespace img
-}//namespace ktftp
+}//namespace tftp
+
+#endif //__SCR_HPP

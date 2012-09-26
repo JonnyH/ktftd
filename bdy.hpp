@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  lbm.cpp
+ *       Filename:  bdy.hpp
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  26/09/12 09:53:45
+ *        Created:  26/09/12 11:15:06
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,19 +16,19 @@
  * =====================================================================================
  */
 
-#include "lbm.hpp"
+#ifndef __BDY_HPP
+#define __BDY_HPP
 
-#include <cassert>
+#include <iostream>
+
+#include "palette_image.hpp"
 
 namespace ktftp
 {
 namespace img
 {
-
-	Image LoadLBMImage(std::istream& inStream)
-	{
-		assert(0 && "LBM loading unimplemented");	
-	}
-
+	PaletteImage LoadBDYImage(std::istream &inStream);
 }//namespace img
-}//namespace ktftp
+}//namespace tftp
+
+#endif //__BDY_HPP
