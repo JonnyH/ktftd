@@ -21,6 +21,6 @@
 
 int main(int argc, char **argv)
 {
-	std::cout << sizeof(ktftp::datafiles::soldier_dat)<<std::endl;
-	std::cout << "0x" << std::hex << offsetof(ktftp::datafiles::soldier_dat, soldier[0].MCSkill) <<std::endl;
+	std::cout << sizeof(ktftd::datafiles::soldier_dat)<<std::endl;
+	std::cout << "0x" << std::hex << offsetof(ktftd::datafiles::soldier_dat, soldier[0].MCSkill) <<std::endl;
 }

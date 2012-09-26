@@ -23,8 +23,9 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
+#include <set>
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {
@@ -70,18 +71,21 @@ namespace img
 		PaletteImage(){}
 		PaletteImage(uint32_t sizeX, uint32_t sizeY) : sizeX(sizeX),sizeY(sizeY),data(new uint8_t[sizeX*sizeY])
 		{
+			//By default, in XCOM color idx 0 is transparent
+			this->transparentValues.insert(0);
 		}
 		uint32_t sizeX;
 		uint32_t sizeY;
 		std::unique_ptr<uint8_t[]> data;
 		void setPixel(uint32_t x, uint32_t y, uint8_t val);
 		uint8_t readPixel(uint32_t x, uint32_t y);
+		std::set<uint8_t> transparentValues;
 
 		Image getImage(Palette &palette);
 	};
 
 	Palette LoadPalette(std::istream &inStream, int paletteNo);
 }//namespace img
-}//namespace ktftp
+}//namespace ktftd
 
 #endif //__PALETTE_IMAGE_HPP

@@ -23,7 +23,7 @@
 
 #include "palette_image.hpp"
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {

@@ -23,7 +23,7 @@
 
 #include "palette_image.hpp"
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {
@@ -31,6 +31,6 @@ namespace img
 	Image LoadLBMImage(std::istream &inStream);
 
 }//namespace img
-}//namespace ktftp
+}//namespace ktftd
 
 #endif

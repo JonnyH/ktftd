@@ -25,7 +25,7 @@
 
 
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {
@@ -94,11 +94,18 @@ namespace img
 		{
 			for (unsigned int x = 0; x < this->sizeX; x++)
 			{
-				img.data[pos] = RGBAColor(palette.palette[this->data[pos]]);
+				if (this->transparentValues.count(this->data[pos]) == 1)
+				{
+					img.data[pos] = RGBAColor(0, 0, 0, 0);
+				}
+				else
+				{
+					img.data[pos] = RGBAColor(palette.palette[this->data[pos]]);
+				}
 				pos++;
 			}
 		}
 		return img;
 	}
 }//namespace img
-}//namespace ktftp
+}//namespace ktftd

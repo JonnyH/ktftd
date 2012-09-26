@@ -62,9 +62,9 @@ int main(int argc, char **argv)
 
 		bool requiresPalette;
 
-		ktftp::img::Palette palette;
-		ktftp::img::PaletteImage palettedImage;
-		ktftp::img::Image outputImage;
+		ktftd::img::Palette palette;
+		ktftd::img::PaletteImage palettedImage;
+		ktftd::img::Image outputImage;
 
 		std::ifstream inFile(fileName);
 
@@ -72,32 +72,32 @@ int main(int argc, char **argv)
 		{
 			std::cout << "Is SPK File\n";
 			requiresPalette = true;
-			palettedImage = ktftp::img::LoadSPKImage(inFile);
+			palettedImage = ktftd::img::LoadSPKImage(inFile);
 		}
 		else if (bdy == fileName.length()-4)
 		{
 			std::cout << "Is BDY file\n";
 			requiresPalette = true;
-			palettedImage = ktftp::img::LoadBDYImage(inFile);
+			palettedImage = ktftd::img::LoadBDYImage(inFile);
 		}
 		else if(scr == fileName.length()-4)
 		{
 			std::cout << "Is SCR file\n";
 			requiresPalette = true;
-			palettedImage = ktftp::img::LoadSCRImage(inFile);
+			palettedImage = ktftd::img::LoadSCRImage(inFile);
 		}
 		else if(dat == fileName.length()-4)
 		{
 			std::cout << "Is DAT file\n";
 			requiresPalette = true;
 			//DAT files are the same as SCR
-			palettedImage = ktftp::img::LoadSCRImage(inFile);
+			palettedImage = ktftd::img::LoadSCRImage(inFile);
 		}
 		else if(lbm == fileName.length() - 4)
 		{
 			std::cout << "Is LBM file\n";
 			requiresPalette = false;
-			outputImage = ktftp::img::LoadLBMImage(inFile);
+			outputImage = ktftd::img::LoadLBMImage(inFile);
 		}
 		else
 		{
@@ -128,15 +128,15 @@ int main(int argc, char **argv)
 				{
 					int paletteOffset = atoi(argv[4]);
 					std::ifstream paletteFile(paletteName);
-					palette = ktftp::img::LoadPalette(paletteFile, paletteOffset);
+					palette = ktftd::img::LoadPalette(paletteFile, paletteOffset);
 				}
 			}
 			else if(lbm == paletteName.length()-4)
 			{
 				std::cout << "Is lbm palette\n";
 				std::ifstream paletteFile(paletteName);
-				auto pImage = ktftp::img::LoadLBMImage(paletteFile);
-				palette = ktftp::img::Palette(pImage);
+				auto pImage = ktftd::img::LoadLBMImage(paletteFile);
+				palette = ktftd::img::Palette(pImage);
 			}
 			else
 			{
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 		}
 		std::ifstream inFile(argv[2]);
 		int paletteOffset = atoi(argv[3]);
-		auto palette = ktftp::img::LoadPalette(inFile, paletteOffset);
+		auto palette = ktftd::img::LoadPalette(inFile, paletteOffset);
 		auto image = palette.toImage();
 		image.writePNG(outputFileName);
 	}

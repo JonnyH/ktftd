@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(tftpimg)
 
-set(CMAKE_C_FLAGS "-std=gnu99 -fvisibility=hidden -pthread")
-set(CMAKE_CXX_FLAGS "-std=gnu++0x -fvisibility=hidden -pthread")
-set(CMAKE_MODULE_LINKER_FLAGS "-fvisibility=hidden -pthread")
+set(CMAKE_C_FLAGS "-std=gnu99 -fvisibility=hidden -pthread -Wall")
+set(CMAKE_CXX_FLAGS "-std=gnu++0x -fvisibility=hidden -pthread -Wall")
+set(CMAKE_MODULE_LINKER_FLAGS "-fvisibility=hidden -pthread -Wall")
 
 set(TFTPIMG_SOURCE_FILES
 				img.cpp

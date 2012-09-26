@@ -21,12 +21,12 @@
 
 #include "palette_image.hpp"
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {
 
 PaletteImage LoadSPKImage(std::istream &inFile);
 }//namespace img
-}//namespace ktftp
+}//namespace ktftd
 #endif

@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {
@@ -54,4 +54,4 @@ namespace img
 	}
 
 }//namespace img
-}//namespace ktftp
+}//namespace ktftd

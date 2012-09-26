@@ -23,7 +23,7 @@
 #include "spk.hpp"
 #include "lbm.hpp"
 
-namespace ktftp
+namespace ktftd
 {
 namespace img
 {
@@ -58,5 +58,5 @@ PaletteImage LoadSPKImage(std::istream &inStream)
 	return img;
 }
 }//namespace img
-}//namespace ktftp
+}//namespace ktftd
 
