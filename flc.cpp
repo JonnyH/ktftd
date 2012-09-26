@@ -27,23 +27,23 @@ static uint8_t* DecodeRLEFrame(int width, int height, std::istream &inStream)
 {
 	uint8_t* outputBytes = new uint8_t[width*height];
 	int x = 0;
-	auto streamOffset = inStream.tellg();
+	//auto streamOffset = inStream.tellg();
 
 	for (int y = 0; y < height; y++)
 	{
-		std::cout << "y = " << y << std::endl;
+		//std::cout << "y = " << y << std::endl;
 		char *outLine = new char[width];
 		//First byte is skipped;
 		inStream.seekg(1, std::ios::cur);
 		while (x < width)
 		{
-			std::cout << "x = " << x << std::endl;
+			//std::cout << "x = " << x << std::endl;
 			char count;
 			inStream.read(&count, 1);
 			if (count < 0)
 			{
 				int copyBytes = -count;
-				std::cout << "Copying " << copyBytes << " bytes\n";
+				//std::cout << "Copying " << copyBytes << " bytes\n";
 				inStream.read((char*)outLine+x, copyBytes);
 				x += copyBytes;
 			}
@@ -52,7 +52,7 @@ static uint8_t* DecodeRLEFrame(int width, int height, std::istream &inStream)
 				int replicateCount = count;
 				char replicateData;
 				inStream.read(&replicateData, 1);
-				std::cout << "Replicating " << replicateCount << " bytes\n";
+				//std::cout << "Replicating " << replicateCount << " bytes\n";
 				for (int i = 0; i < replicateCount; i++)
 				{
 					outLine[x] = replicateData;
@@ -64,7 +64,7 @@ static uint8_t* DecodeRLEFrame(int width, int height, std::istream &inStream)
 		x = 0;
 	}
 
-	std::cout << "Read " << (inStream.tellg()-streamOffset) << " bytes\n";
+	//std::cout << "Read " << (inStream.tellg()-streamOffset) << " bytes\n";
 
 	return outputBytes;
 }
@@ -79,13 +79,13 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 	inStream.read((char*)&header, sizeof(header));
 	if (inStream.bad() || inStream.eof())
 	{
-		std::cout << "End of file\n";
+		//std::cout << "End of file\n";
 		return new FLCChunk();
 	}
-	std::cout << "Loading chunk 0x" << std::hex << header.type << std::dec << " size " << header.size << "bytes\n";
+	//std::cout << "Loading chunk 0x" << std::hex << header.type << std::dec << " size " << header.size << "bytes\n";
 	assert(ChunkIDMap.count(header.type) == 1);
 	chunkType = ChunkIDMap[header.type];
-	std::cout << "Found chunk of type " << ChunkNameMap[chunkType] << " of size " << header.size << std::endl;
+	//std::cout << "Found chunk of type " << ChunkNameMap[chunkType] << " of size " << header.size << std::endl;
 
 	switch (chunkType)
 	{
@@ -102,7 +102,7 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 			chunk = new FLCImageChunk(imageWidth, imageHeight, DecodeRLEFrame(imageWidth, imageHeight, inStream));
 			break;
 		default:
-			std::cout << "TODO: Other chunk types?\n";
+			//std::cout << "TODO: Other chunk types?\n";
 			chunk = new FLCChunk(chunkType, header.size);
 			size_t skipBytes = header.size - sizeof(header);
 			if (skipBytes%2)
@@ -128,11 +128,11 @@ FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream, int vi
 {
 	//Frame chunks contain subchunks after an extra header
 	inStream.read((char*)&this->frameHeader, sizeof(this->frameHeader));
-	std::cout << "Frame header:" <<
-		"\n\tChunks\t" << this->frameHeader.chunks << 
-		"\n\tDelay\t" << this->frameHeader.delay <<
-		"\n\tWidthOV\t" << this->frameHeader.widthOverride <<
-		"\n\tHeightOV\t" << this->frameHeader.heightOverride << std::endl;
+	//std::cout << "Frame header:" <<
+	//	"\n\tChunks\t" << this->frameHeader.chunks << 
+	//	"\n\tDelay\t" << this->frameHeader.delay <<
+	//	"\n\tWidthOV\t" << this->frameHeader.widthOverride <<
+	//	"\n\tHeightOV\t" << this->frameHeader.heightOverride << std::endl;
 	
 	this->subChunks.resize(3);
 
@@ -149,7 +149,7 @@ FLCChunkColor256::FLCChunkColor256(size_t size, std::istream &inStream)
 	: FLCChunk(CT_COLOR_256, size)
 {
 	inStream.read((char*)&this->packetCount, 2);
-	std::cout << "CT_COLOR_256 section w/ " << this->packetCount << " packets\n";
+	//std::cout << "CT_COLOR_256 section w/ " << this->packetCount << " packets\n";
 	
 
 	for (int packet = 0; packet < this->packetCount; packet++)
@@ -161,7 +161,7 @@ FLCChunkColor256::FLCChunkColor256(size_t size, std::istream &inStream)
 
 		int copy = copyByte;
 		int skip = skipByte;
-		std::cout << "Packet " << packet << " skip " << (int)skip << " copy " << (int)copy << std::endl;
+		//std::cout << "Packet " << packet << " skip " << (int)skip << " copy " << (int)copy << std::endl;
 
 		//If the copy count is zero, there are 256 rgb triplets (complete palette replacement)
 		if (copy == 0)
@@ -185,25 +185,25 @@ int main(int argc, char **argv)
 
 	inFile.read((char*)&flc.header, sizeof(flc.header));
 
-	std::cout << "FLC header:\n" <<
-	"\tsize\t=\t" << flc.header.size << std::endl <<
-	"\ttype\t=\t" << flc.header.type << std::endl <<
-	"\tframes\t=\t" << flc.header.frames << std::endl <<
-	"\twidth\t=\t" << flc.header.width << std::endl <<
-	"\theight\t=\t" << flc.header.height << std::endl <<
-	"\tdepth\t=\t" << flc.header.depth << std::endl <<
-	"\tflags\t=\t" << flc.header.flags << std::endl <<
-	"\tspeed\t=\t" << flc.header.speed << std::endl <<
-	"\taspect_dx\t=\t" << flc.header.aspect_dx << std::endl <<
-	"\taspect_dy\t=\t" << flc.header.aspect_dy << std::endl <<
-	"\text_flags\t=\t" << flc.header.ext_flags << std::endl <<
-	"\tkeyframes\t=\t" << flc.header.keyframes << std::endl <<
-	"\ttotalframes\t=\t" << flc.header.totalframes << std::endl <<
-	"\treq_memory\t=\t" << flc.header.req_memory << std::endl <<
-	"\tmax_regions\t=\t" << flc.header.max_regions << std::endl <<
-	"\ttransp_num\t=\t" << flc.header.transp_num << std::endl <<
-	"\tframe1offset\t=\t" << flc.header.frame1Offset << std::endl <<
-	"\tframe2offset\t=\t" << flc.header.frame2Offset << std::endl;
+	//std::cout << "FLC header:\n" <<
+	//"\tsize\t=\t" << flc.header.size << std::endl <<
+	//"\ttype\t=\t" << flc.header.type << std::endl <<
+	//"\tframes\t=\t" << flc.header.frames << std::endl <<
+	//"\twidth\t=\t" << flc.header.width << std::endl <<
+	//"\theight\t=\t" << flc.header.height << std::endl <<
+	//"\tdepth\t=\t" << flc.header.depth << std::endl <<
+	//"\tflags\t=\t" << flc.header.flags << std::endl <<
+	//"\tspeed\t=\t" << flc.header.speed << std::endl <<
+	//"\taspect_dx\t=\t" << flc.header.aspect_dx << std::endl <<
+	//"\taspect_dy\t=\t" << flc.header.aspect_dy << std::endl <<
+	//"\text_flags\t=\t" << flc.header.ext_flags << std::endl <<
+	//"\tkeyframes\t=\t" << flc.header.keyframes << std::endl <<
+	//"\ttotalframes\t=\t" << flc.header.totalframes << std::endl <<
+	//"\treq_memory\t=\t" << flc.header.req_memory << std::endl <<
+	//"\tmax_regions\t=\t" << flc.header.max_regions << std::endl <<
+	//"\ttransp_num\t=\t" << flc.header.transp_num << std::endl <<
+	//"\tframe1offset\t=\t" << flc.header.frame1Offset << std::endl <<
+	//"\tframe2offset\t=\t" << flc.header.frame2Offset << std::endl;
 
 	while (inFile.good() || !inFile.eof())
 	{
