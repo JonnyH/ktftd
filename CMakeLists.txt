@@ -14,10 +14,17 @@ set(TFTPIMG_SOURCE_FILES
 				palette_image.cpp
 				)
 
+
 add_executable(tftdimg ${TFTPIMG_SOURCE_FILES})
 
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIR})
 target_link_libraries(tftdimg ${PNG_LIBRARY})
+
+set(TFTDFLC_SOURCE_FILES
+				flc.cpp
+				)
+
+add_executable(tftdflc ${TFTDFLC_SOURCE_FILES})
 
 
