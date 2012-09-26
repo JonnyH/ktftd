@@ -39,6 +39,7 @@ namespace img
 		std::string name;
 		uint32_t length;
 		std::unique_ptr<char[]> data;
+		virtual ~IFFChunk(){};
 	};
 
 	class IFF_BMHD_Chunk : public IFFChunk
@@ -75,13 +76,13 @@ namespace img
 	public:
 		IFF_FORM_Chunk(std::string name, uint32_t length, char* data);
 		std::string subName;
-		std::map<std::string, IFFChunk*> subChunks;
+		std::map<std::string, std::unique_ptr<IFFChunk>> subChunks;
 
 	};
 
-	static std::map<std::string, IFFChunk*> LoadChunks(std::istream &inStream)
+	static std::map<std::string, std::unique_ptr<IFFChunk>> LoadChunks(std::istream &inStream)
 	{
-		std::map<std::string, IFFChunk*> chunks;
+		std::map<std::string, std::unique_ptr<IFFChunk>> chunks;
 		while (inStream.good() && !inStream.eof())
 		{
 			char chunkName[5];
@@ -107,23 +108,25 @@ namespace img
 			if (name == "BMHD")
 			{
 				std::cout << "Inserting BMHD header\n";
-				chunks[name] = new IFF_BMHD_Chunk(name, chunkSize, data);
+				chunks[name] = std::unique_ptr<IFFChunk>(new IFF_BMHD_Chunk(name, chunkSize, data));
 			}
 			else if(name == "CMAP")
 			{
 			std::cout << "Inserting CMAP chunk\n";
-			chunks[name] = new IFF_CMAP_Chunk(name, chunkSize, data);
+			chunks[name] = std::unique_ptr<IFFChunk>(new IFF_CMAP_Chunk(name, chunkSize, data));
 			}
 			else if(name == "FORM")
 			{
 			std::cout << "Inserting FORM chunk\n";
-			chunks[name] = new IFF_FORM_Chunk(name, chunkSize, data);
+			chunks[name] = std::unique_ptr<IFFChunk>(new IFF_FORM_Chunk(name, chunkSize, data));
 			}
 			else
 			{
 			std::cout << "Inserting normal chunk\n";
-			chunks[name] = new IFFChunk(name, chunkSize, data);
+			chunks[name] = std::unique_ptr<IFFChunk>(new IFFChunk(name, chunkSize, data));
 			}
+
+			delete[] data;
 		}
 		return chunks;
 	}
@@ -171,7 +174,7 @@ namespace img
 
 	IFF_FORM_Chunk::IFF_FORM_Chunk(std::string name, uint32_t length, char* data) : IFFChunk(name, length, data)
 	{
-		this->subName = std::string("PBM ");
+		this->subName = std::string(data, 4);
 		std::cout << "New FORM." << subName << " chunk\n";
 		std::istringstream stream;
 		stream.rdbuf()->pubsetbuf(&data[4], length-4);
@@ -221,14 +224,14 @@ namespace img
 		LBMImage image;
 		auto rootChunks = LoadChunks(inStream);
 		assert(rootChunks.count("FORM") == 1);
-		IFF_FORM_Chunk* formChunk = static_cast<IFF_FORM_Chunk*>(rootChunks["FORM"]);
+		IFF_FORM_Chunk* formChunk = static_cast<IFF_FORM_Chunk*>(rootChunks["FORM"].get());
 		assert(formChunk->subName == "PBM ");
 		assert(formChunk->subChunks.count("BMHD") == 1);
-		IFF_BMHD_Chunk* bmhdChunk = static_cast<IFF_BMHD_Chunk*>(formChunk->subChunks["BMHD"]);
+		IFF_BMHD_Chunk* bmhdChunk = static_cast<IFF_BMHD_Chunk*>(formChunk->subChunks["BMHD"].get());
 
 		if (formChunk->subChunks.count("BODY") == 1)
 		{
-			IFFChunk* bodyChunk = static_cast<IFFChunk*>(formChunk->subChunks["BODY"]);
+			IFFChunk* bodyChunk = static_cast<IFFChunk*>(formChunk->subChunks["BODY"].get());
 			std::unique_ptr<char[]> decompressedBody;
 			uint32_t decompressedSize = 0;
 
@@ -257,7 +260,7 @@ namespace img
 		}
 		if(formChunk->subChunks.count("CMAP") == 1)
 		{
-			IFF_CMAP_Chunk* cmapChunk = static_cast<IFF_CMAP_Chunk*>(formChunk->subChunks["CMAP"]);	
+			IFF_CMAP_Chunk* cmapChunk = static_cast<IFF_CMAP_Chunk*>(formChunk->subChunks["CMAP"].get());	
 			assert(cmapChunk->length == 256*3);
 			image.palette = std::unique_ptr<Palette>(new Palette());
 			memcpy((void*)&image.palette->palette[0], cmapChunk->data.get(), 256*3);
