@@ -16,17 +16,55 @@
  * =====================================================================================
  */
 
+#include <png.h>
+#include <fstream>
+#include <iostream>
+#include <cassert>
+
 #include "palette_image.hpp"
 
-#include <png.h>
+
 
 namespace ktftp
 {
 namespace img
 {
-	Palette LoadPalette(std::istream &inStream)
+	Palette LoadPalette(std::istream &inStream, int paletteNo)
 	{
-		return Palette();
+		Palette palette;
+
+		inStream.seekg((256*3+6)*paletteNo, std::ios::beg);
+
+		assert(inStream.good());
+
+		inStream.read((char*)&palette.palette[0], 256*3);
+
+		//The range is 0-63, should be 0-255, multiply all values by 4
+		for (int i = 0; i < 256; i++)
+		{
+			palette.palette[i].r *= 4;
+			palette.palette[i].g *= 4;
+			palette.palette[i].b *= 4;
+		}
+		
+		return palette;
+	}
+
+	Palette::Palette(Image &img)
+	{
+		assert(img.sizeX >= 256);
+	}
+
+	Image Palette::toImage()
+	{
+		Image image(256,1);
+
+		for (int i = 0; i < 256; i++)
+		{
+			image.data[i] = RGBAColor(this->palette[i]);
+		}
+
+		return image;
 	}
 
 	void Image::writePNG(const char* fileName)

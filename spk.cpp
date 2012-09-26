@@ -21,6 +21,7 @@
 #include <cassert>
 
 #include "spk.hpp"
+#include "lbm.hpp"
 
 namespace ktftp
 {
@@ -59,19 +60,3 @@ PaletteImage LoadSPKImage(std::istream &inStream)
 }//namespace img
 }//namespace ktftp
 
-#include <cstdlib>
-
-int main(int argc, char **argv)
-{
-	if (argc != 3)
-	{
-		std::cout << "Useage: ./spk2png {file.spk} {palette}\n";
-		return EXIT_FAILURE;
-	}
-	std::ifstream inSPK(argv[1]);
-	std::ifstream inPalette(argv[2]);
-	auto palImg = ktftp::img::LoadSPKImage(inSPK);
-	auto palette = ktftp::img::LoadPalette(inPalette);
-	auto img = palImg.getImage(palette);
-	img.writePNG("test.png");
-}

@@ -21,6 +21,8 @@
 
 #include <cstdint>
 #include <memory>
+#include <fstream>
+#include <iostream>
 
 namespace ktftp
 {
@@ -54,13 +56,9 @@ namespace img
 	class Palette
 	{
 	public:
-		Palette()
-		{
-			for (int i = 0; i < 256; i++)
-			{
-				palette[255-i] = RGBColor(i,i,i);
-			}
-		}
+		Palette()	{}
+		Palette(Image &image);
+		Image toImage();
 		
 		RGBColor palette[256];
 	};
@@ -80,7 +78,7 @@ namespace img
 		Image getImage(Palette &palette);
 	};
 
-	Palette LoadPalette(std::istream &inStream);
+	Palette LoadPalette(std::istream &inStream, int paletteNo);
 }//namespace img
 }//namespace ktftp
 
