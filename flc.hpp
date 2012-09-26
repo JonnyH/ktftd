@@ -207,6 +207,31 @@ public:
 	std::unique_ptr<uint8_t[]> data;
 };
 
+class FLIDeltaChunk : public FLCChunk
+{
+public:
+	FLIDeltaChunk(size_t size, int width, int height, std::istream &inStream);
+	int lineSkip;
+
+	class DeltaPacket
+	{
+	public:
+		int pixelSkip;
+		int pixelCount;
+		char* pixelBytes;
+	};
+
+	class DeltaLine
+	{
+	public:
+		int packetCount;
+		std::vector<DeltaPacket> packets;
+	};
+
+	std::vector<DeltaLine> deltaLines;
+
+};
+
 class SegmentTable
 {
 public:

@@ -101,8 +101,11 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 		case CT_BYTE_RUN:
 			chunk = new FLCImageChunk(imageWidth, imageHeight, DecodeRLEFrame(imageWidth, imageHeight, inStream));
 			break;
+		case CT_DELTA_FLI:
+			chunk = new FLIDeltaChunk(header.size, imageWidth, imageHeight, inStream);
+			break;
 		default:
-			//std::cout << "TODO: Other chunk types?\n";
+			std::cout << "TODO: Implement chunk type " << ChunkNameMap[chunkType] << std::endl;
 			chunk = new FLCChunk(chunkType, header.size);
 			size_t skipBytes = header.size - sizeof(header);
 			if (skipBytes%2)
@@ -172,8 +175,74 @@ FLCChunkColor256::FLCChunkColor256(size_t size, std::istream &inStream)
 
 		inStream.read((char*)&this->palette[skip], 3*copy);
 	}
+}
+
+FLIDeltaChunk::FLIDeltaChunk(size_t size, int width, int height, std::istream &inStream)
+	: FLCChunk(CT_DELTA_FLI, size)
+{
+	uint16_t skip;
+	inStream.read((char*)&skip, 2);
+	this->lineSkip = skip;
+
+	std::cout << "Chunk size " << size << std::endl;
+	std::cout << "lineskip " << skip << std::endl;
+
+	auto streamPos = inStream.tellg();
+
+	for (int y = skip; y < height; y++)
+	{
+		std::cout << "line " << y << std::endl;
+		DeltaLine line;
+		uint8_t packetCount;
+		inStream.read((char*)&packetCount, 1);
+		line.packetCount = packetCount;
+		std::cout << "PacketCount: " << line.packetCount << std::endl;
+
+		for (int packetNo = 0; packetNo < packetCount; packetNo++)
+		{
+			DeltaPacket packet;
+			uint8_t pixelSkip;
+			inStream.read((char*)&pixelSkip, 1);
+			packet.pixelSkip = pixelSkip;
+			int8_t count;
+			inStream.read((char*)&count, 1);
+			while (count == 0)
+			{
+				inStream.read((char*)&pixelSkip, 1);
+				packet.pixelSkip += pixelSkip;
+				inStream.read((char*)&count, 1);
+			}
+
+			std::cout << "Pixelskip: " << packet.pixelSkip << std::endl;
+			std::cout << "Count: " << (int)count << std::endl;
 
 
+			if (count < 0)
+			{
+				int replicateCount = -count;
+				packet.pixelCount = replicateCount;
+				packet.pixelBytes = new char[replicateCount];
+				uint8_t replicateByte;
+				inStream.read((char*)&replicateByte, 1);
+				std::cout << "Replicating " << replicateCount << "bytes\n";
+				for (int i = 0; i < replicateCount; i++)
+				{
+					packet.pixelBytes[i] = replicateByte;
+				}
+			}
+			else
+			{
+				int copyCount = count;
+				packet.pixelCount = copyCount;
+				packet.pixelBytes = new char[copyCount];
+				std::cout << "Copying " << copyCount << "bytes\n";
+				inStream.read((char*)packet.pixelBytes, copyCount);
+			}
+			line.packets.push_back(packet);
+		}
+		this->deltaLines.push_back(line);
+	}
+	std::cout << "Read " << inStream.tellg()-streamPos << "bytes\n";
 }
 
 int main(int argc, char **argv)
