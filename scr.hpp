@@ -29,6 +29,6 @@ namespace img
 {
 	PaletteImage LoadSCRImage(std::istream &inStream);
 }//namespace img
-}//namespace tftp
+}//namespace ktftd
 
 #endif //__SCR_HPP

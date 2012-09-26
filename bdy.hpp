@@ -29,6 +29,6 @@ namespace img
 {
 	PaletteImage LoadBDYImage(std::istream &inStream);
 }//namespace img
-}//namespace tftp
+}//namespace ktftd
 
 #endif //__BDY_HPP

@@ -31,11 +31,12 @@ void printUsage()
 {
 	std::cout << "Useage:\n" <<
 		"\tDump image:\n" <<
-		"\t\ttftpimg i [file.{spk,bdy,scr,dat}] [palette.dat] [palette offset]\n" <<
-		"\t\ttftpimg i [file.{spk,bdy,scr,dat}] [palette.lbm]\n" <<
-		"\t\ttftpimg i [file.lbm]\n" <<
+		"\t\ttftdimg i [file.{spk,bdy,scr,dat}] [palette.dat] [palette offset]\n" <<
+		"\t\ttftdimg i [file.{spk,bdy,scr,dat}] [palette.lbm]\n" <<
+		"\t\ttftdimg i [file.lbm]\n" <<
 		"\tDump palette:\n" <<
-		"\t\ttftpimg p [palette.dat] [palette.offset]\n";
+		"\t\ttftdimg p [palette.dat] [palette.offset]\n" <<
+		"\t\ttftdimg p [palette.lbm]\n";
 }
 
 int main(int argc, char **argv)
@@ -155,14 +156,40 @@ int main(int argc, char **argv)
 	}
 	else if (argv[1][0] == 'p')
 	{
-		if (argc != 4)
+		if (argc < 3)
 		{
 			printUsage();
 			return EXIT_FAILURE;
 		}
-		std::ifstream inFile(argv[2]);
-		int paletteOffset = atoi(argv[3]);
-		auto palette = ktftd::img::LoadPalette(inFile, paletteOffset);
+
+		std::string paletteName(argv[2]);
+		ktftd::img::Palette palette;
+
+		if (paletteName.rfind(".LBM") == paletteName.length()-4)
+		{
+			std::ifstream paletteFile(paletteName);
+			auto lbmImage = ktftd::img::LoadLBMImage(paletteFile);
+			palette = *lbmImage.palette;
+		}
+		else if (paletteName.rfind(".DAT") == paletteName.length()-4)
+		{
+	
+			if (argc != 4)
+			{
+				printUsage();
+				return EXIT_FAILURE;
+			}
+			std::ifstream inFile(argv[2]);
+			int paletteOffset = atoi(argv[3]);
+			palette = ktftd::img::LoadPalette(inFile, paletteOffset);
+		}
+		else
+		{
+			std::cerr << "Unknown palette file type\n";
+			printUsage();
+			return EXIT_FAILURE;
+		}
+
 		auto image = palette.toImage();
 		image.writePNG(outputFileName);
 	}

@@ -23,7 +23,7 @@
 
 #define offsetof(st, m) __builtin_offsetof(st, m)
 
-namespace ktftp
+namespace ktftd
 {
 namespace datafiles
 {
@@ -581,6 +581,6 @@ namespace datafiles
 	static_assert(sizeof(zonal_dat) == 12, "Expected zonal_dat to be 12 bytes");
 
 }//namespace datafiles
-}//namespace ktftp
+}//namespace ktftd
 
 #endif //__DATAFILES_H
