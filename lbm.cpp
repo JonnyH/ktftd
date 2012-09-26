@@ -99,6 +99,11 @@ namespace img
 
 			char* data = new char[chunkSize];
 			inStream.read(data, chunkSize);
+			//Chunks are always aligned to 2 bytes
+			if (chunkSize%2)
+			{
+				inStream.seekg(1, std::ios::cur);
+			}
 			if (name == "BMHD")
 			{
 				std::cout << "Inserting BMHD header\n";
@@ -211,47 +216,53 @@ namespace img
 		return outputBuffer;
 	}
 
-	Image LoadLBMImage(std::istream& inStream)
+	LBMImage LoadLBMImage(std::istream& inStream)
 	{
+		LBMImage image;
 		auto rootChunks = LoadChunks(inStream);
 		assert(rootChunks.count("FORM") == 1);
 		IFF_FORM_Chunk* formChunk = static_cast<IFF_FORM_Chunk*>(rootChunks["FORM"]);
 		assert(formChunk->subName == "PBM ");
 		assert(formChunk->subChunks.count("BMHD") == 1);
-		assert(formChunk->subChunks.count("BODY") == 1);
-		assert(formChunk->subChunks.count("CMAP") == 1);
 		IFF_BMHD_Chunk* bmhdChunk = static_cast<IFF_BMHD_Chunk*>(formChunk->subChunks["BMHD"]);
-		IFF_CMAP_Chunk* cmapChunk = static_cast<IFF_CMAP_Chunk*>(formChunk->subChunks["CMAP"]);	
-		IFFChunk* bodyChunk = static_cast<IFFChunk*>(formChunk->subChunks["BODY"]);
 
-
-		std::unique_ptr<char[]> decompressedBody;
-		uint32_t decompressedSize = 0;
-
-		switch (bmhdChunk->header.compression)
+		if (formChunk->subChunks.count("BODY") == 1)
 		{
-			case 0:
-			{
-				std::cout << "No compression\n";
-				decompressedSize = bodyChunk->length;
-				decompressedBody = std::unique_ptr<char[]>(new char[bodyChunk->length]);
-				memcpy((void*)&decompressedBody[0], (void*)&bodyChunk->data[0], bodyChunk->length);
-				break;
-			}
-			case 1:
-			{
-				std::cout << "ByteRun1 compression\n";
-				decompressedSize = bmhdChunk->header.width*bmhdChunk->header.height;
-				decompressedBody = std::unique_ptr<char[]>(DecompressByteRun1(bodyChunk->data.get(), bodyChunk->length, decompressedSize));
-			}
-				
-		}
+			IFFChunk* bodyChunk = static_cast<IFFChunk*>(formChunk->subChunks["BODY"]);
+			std::unique_ptr<char[]> decompressedBody;
+			uint32_t decompressedSize = 0;
 
-		Palette palette;
-		memcpy(palette.palette, cmapChunk->data.get(), 256);
-		PaletteImage paletteImage(bmhdChunk->header.width, bmhdChunk->header.height);
-		memcpy(paletteImage.data.get(), decompressedBody.get(), decompressedSize);
-		return paletteImage.getImage(palette);
+			switch (bmhdChunk->header.compression)
+			{
+				case 0:
+				{
+					std::cout << "No compression\n";
+					decompressedSize = bodyChunk->length;
+					decompressedBody = std::unique_ptr<char[]>(new char[bodyChunk->length]);
+					memcpy((void*)&decompressedBody[0], (void*)&bodyChunk->data[0], bodyChunk->length);
+					break;
+				}
+				case 1:
+				{
+					std::cout << "ByteRun1 compression\n";
+					decompressedSize = bmhdChunk->header.width*bmhdChunk->header.height;
+					decompressedBody = std::unique_ptr<char[]>(DecompressByteRun1(bodyChunk->data.get(), bodyChunk->length, decompressedSize));
+				}
+					
+			}
+
+			image.image = std::unique_ptr<PaletteImage>(new PaletteImage(bmhdChunk->header.width, bmhdChunk->header.height));
+			memcpy(image.image->data.get(), decompressedBody.get(), decompressedSize);
+			
+		}
+		if(formChunk->subChunks.count("CMAP") == 1)
+		{
+			IFF_CMAP_Chunk* cmapChunk = static_cast<IFF_CMAP_Chunk*>(formChunk->subChunks["CMAP"]);	
+			assert(cmapChunk->length == 256*3);
+			image.palette = std::unique_ptr<Palette>(new Palette());
+			memcpy((void*)&image.palette->palette[0], cmapChunk->data.get(), 256*3);
+		}
+		return image;
 
 	}
 

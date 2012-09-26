@@ -23,6 +23,7 @@
 #include "bdy.hpp"
 
 #include <cstdlib>
+#include <cassert>
 
 static const char* outputFileName = "out.png";
 
@@ -97,7 +98,10 @@ int main(int argc, char **argv)
 		{
 			std::cout << "Is LBM file\n";
 			requiresPalette = false;
-			outputImage = ktftd::img::LoadLBMImage(inFile);
+			auto lbmFile = ktftd::img::LoadLBMImage(inFile);
+			assert(lbmFile.palette);
+			assert(lbmFile.image);
+			outputImage = lbmFile.image->getImage(*lbmFile.palette);
 		}
 		else
 		{
@@ -135,8 +139,8 @@ int main(int argc, char **argv)
 			{
 				std::cout << "Is lbm palette\n";
 				std::ifstream paletteFile(paletteName);
-				auto pImage = ktftd::img::LoadLBMImage(paletteFile);
-				palette = ktftd::img::Palette(pImage);
+				auto lbmImage = ktftd::img::LoadLBMImage(paletteFile);
+				palette = *lbmImage.palette;
 			}
 			else
 			{

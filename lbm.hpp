@@ -20,6 +20,7 @@
 #define __LBM_HPP
 
 #include <iostream>
+#include <memory>
 
 #include "palette_image.hpp"
 
@@ -27,8 +28,14 @@ namespace ktftd
 {
 namespace img
 {
+	class LBMImage
+	{
+	public:
+		std::unique_ptr<Palette> palette;
+		std::unique_ptr<PaletteImage> image;
+	};
 
-	Image LoadLBMImage(std::istream &inStream);
+	LBMImage LoadLBMImage(std::istream &inStream);
 
 }//namespace img
 }//namespace ktftd
