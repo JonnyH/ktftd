@@ -19,6 +19,8 @@
 #ifndef __FLC_HPP
 #define __FLC_HPP
 
+#include "palette_image.hpp"
+
 #include <stdint.h>
 #include <vector>
 #include <map>
@@ -183,6 +185,14 @@ public:
 	}audioHeader;
 	static_assert(sizeof(audioHeader) == 10, "Expected audioHeader to be 10 bytes");
 	std::unique_ptr<char[]> sampleValues;
+};
+
+class FLCChunkColor256 : public FLCChunk
+{
+public:
+	FLCChunkColor256(size_t size, std::istream &inStream);
+	uint16_t packetCount;
+	ktftd::img::RGBColor palette[256];
 };
 
 class SegmentTable

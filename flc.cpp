@@ -49,6 +49,9 @@ FLCChunk *loadChunk(std::istream &inStream)
 		case CT_FRAME:
 			chunk = new FLCFrameTypeChunk(header.size, inStream);
 			break;
+		case CT_COLOR_256:
+			chunk = new FLCChunkColor256(header.size, inStream);
+			break;
 		default:
 			std::cout << "TODO: Other chunk types?\n";
 			chunk = new FLCChunk(chunkType, header.size);
@@ -88,6 +91,37 @@ FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream)
 	{
 		this->subChunks[chunk] = loadChunk(inStream);
 	}
+}
+
+FLCChunkColor256::FLCChunkColor256(size_t size, std::istream &inStream)
+	: FLCChunk(CT_COLOR_256, size)
+{
+	inStream.read((char*)&this->packetCount, 2);
+	std::cout << "CT_COLOR_256 section w/ " << this->packetCount << " packets\n";
+	
+
+	for (int packet = 0; packet < this->packetCount; packet++)
+	{
+		uint8_t skipByte;
+		uint8_t copyByte;
+		inStream.read((char*)&skipByte, 1);
+		inStream.read((char*)&copyByte, 1);
+
+		int copy = copyByte;
+		int skip = skipByte;
+		std::cout << "Packet " << packet << " skip " << (int)skip << " copy " << (int)copy << std::endl;
+
+		//If the copy count is zero, there are 256 rgb triplets (complete palette replacement)
+		if (copy == 0)
+		{
+			copy = 256;
+			skip = 0;
+		}
+
+		inStream.read((char*)&this->palette[skip], 3*copy);
+	}
+
+
 }
 
 int main(int argc, char **argv)
