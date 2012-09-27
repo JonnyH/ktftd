@@ -207,28 +207,25 @@ public:
 	std::unique_ptr<uint8_t[]> data;
 };
 
-class FLIDeltaChunk : public FLCChunk
+class DeltaPacket
 {
 public:
-	FLIDeltaChunk(size_t size, int width, int height, std::istream &inStream);
+	int pixelSkip;
+	int pixelCount;
+	char* pixelBytes;
+};
+
+//Not an FLC chunk as such - but a decoded delta image
+class FLCDeltaChunk : public FLCChunk
+{
+public:
+	FLCDeltaChunk(int width, int height) : width(width),height(height){}
+	int width;
+	int height;
 	int lineSkip;
 
-	class DeltaPacket
-	{
-	public:
-		int pixelSkip;
-		int pixelCount;
-		char* pixelBytes;
-	};
 
-	class DeltaLine
-	{
-	public:
-		int packetCount;
-		std::vector<DeltaPacket> packets;
-	};
-
-	std::vector<DeltaLine> deltaLines;
+	std::vector<DeltaPacket> deltaPackets;
 
 };
 
@@ -239,7 +236,7 @@ public:
 	uint16_t type;
 	uint16_t segmentCount;
 }__attribute__((packed));
-static_assert(sizeof(SegmentTable) == 8, "Expected SegmentTable to be 4 bytes");
+static_assert(sizeof(SegmentTable) == 8, "Expected SegmentTable to be 8 bytes");
 
 
 class Segment
