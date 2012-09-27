@@ -64,6 +64,7 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 	uint16_t encodedLines;
 	inStream.read((char*)&encodedLines, 2);
 
+	int prevLinePixelsRemaining = 0;
 
 	for (int line = 0; line < encodedLines; line++)
 	{
@@ -71,6 +72,15 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 		bool hasLastPixel = false;
 		uint8_t lastPixelValue = 0;
 		uint16_t lineSkip = 0;
+		
+		int prevLineSkipPixels = 0;
+		assert(prevLinePixelsRemaining >= 0);
+		if (prevLinePixelsRemaining)
+		{
+			prevLineSkipPixels = prevLinePixelsRemaining;
+		}
+		prevLinePixelsRemaining = width;
+
 		inStream.read((char*)&opcode, 2);
 		while (opcode & FLC_OPCODE_MASK)
 		{
@@ -93,12 +103,13 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 		}
 		uint16_t packetCount = opcode;
 
+
 		if (packetCount == 0)
 		{
 			//If no packets, only the last pixel has changed
 			assert(hasLastPixel);
 			DeltaPacket packet;
-			packet.pixelSkip = width - 1 + (width * lineSkip);
+			packet.pixelSkip = width - 1 + (width * lineSkip) + prevLineSkipPixels;
 			lineSkip = 0;
 			packet.pixelCount = 1;
 			packet.pixelBytes = new char[1];
@@ -111,11 +122,16 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 			uint8_t pixelSkip;
 			inStream.read((char*)&pixelSkip, 1);
 
-			packet.pixelSkip = pixelSkip + (width * lineSkip);
+			prevLinePixelsRemaining -= pixelSkip;
+			assert(prevLinePixelsRemaining >= 0);
+
+
+			packet.pixelSkip = ((int)pixelSkip) + (width * lineSkip) + prevLineSkipPixels;
 			lineSkip = 0;
 
 			int8_t count;
 			inStream.read((char*)&count, 1);
+			//TODO: Check this case occurs in FLC
 			while (count == 0)
 			{
 				inStream.read((char*)&pixelSkip, 1);
@@ -129,12 +145,16 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 				packet.pixelCount = count*2;
 				packet.pixelBytes = new char[count*2];
 				inStream.read((char*)packet.pixelBytes, count*2);
+				prevLinePixelsRemaining -= packet.pixelCount;
+				assert(prevLinePixelsRemaining >= 0);
 			}
 			else if (count < 0)
 			{
 				int copyBytes = -count*2;
 				packet.pixelCount = copyBytes;
 				packet.pixelBytes = new char[copyBytes];
+				prevLinePixelsRemaining -= packet.pixelCount;
+				assert(prevLinePixelsRemaining >= 0);
 				uint16_t copiedWord;
 				inStream.read((char*)&copiedWord, 2);
 				uint16_t *pixelWords = (uint16_t*)packet.pixelBytes;
@@ -148,6 +168,7 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 			{
 				assert(0);
 			}
+
 			delta->deltaPackets.push_back(packet);
 		}
 		
