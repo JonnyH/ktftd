@@ -215,6 +215,13 @@ public:
 	char* pixelBytes;
 };
 
+class DeltaLine
+{
+public:
+	int lineSkip;
+	std::vector<DeltaPacket> packets;
+};
+
 //Not an FLC chunk as such - but a decoded delta image
 class FLCDeltaChunk : public FLCChunk
 {
@@ -224,7 +231,7 @@ public:
 	int height;
 
 
-	std::vector<DeltaPacket> deltaPackets;
+	std::vector<DeltaLine> deltaLines;
 
 };
 

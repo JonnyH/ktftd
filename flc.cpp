@@ -37,17 +37,24 @@ int vidHeight, vidWidth;
 
 static void ApplyFrame(FLCDeltaChunk &frameDelta)
 {
-	size_t pos = 0;
-	for (auto &deltaPacket : frameDelta.deltaPackets)
+	int line = 0;
+	char* pos;
+	for (auto &deltaLine : frameDelta.deltaLines)
 	{
-		pos += deltaPacket.pixelSkip;
-		memcpy((char*)&indexedFrameBuffer[pos], deltaPacket.pixelBytes, deltaPacket.pixelCount);
-		pos += deltaPacket.pixelCount;
+		line += deltaLine.lineSkip;
+		pos = indexedFrameBuffer + (line*vidWidth);
+		for (auto &deltaPacket : deltaLine.packets)
+		{
+			pos += deltaPacket.pixelSkip;
+			memcpy((char*)pos, deltaPacket.pixelBytes, deltaPacket.pixelCount);
+			pos += deltaPacket.pixelCount;
+		}
+		line++;
 	}
 	ktftd::img::PaletteImage frameImg(vidWidth, vidHeight);
 	memcpy((char*)frameImg.data.get(), indexedFrameBuffer, vidWidth*vidHeight);
 	ktftd::img::Palette framePalette;
-	memcpy((char*)framePalette.palette, palette, sizeof(palette));
+	memcpy((char*)framePalette.palette, palette, 768);
 
 	std::stringstream ss;
 	ss << "out" << frameCount << ".png";
@@ -64,22 +71,12 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 	uint16_t encodedLines;
 	inStream.read((char*)&encodedLines, 2);
 
-	int prevLinePixelsRemaining = 0;
-
-	for (int line = 0; line < encodedLines; line++)
+	for (int lineNo = 0; lineNo < encodedLines; lineNo++)
 	{
+		DeltaLine line;
 		uint16_t opcode;
-		bool hasLastPixel = false;
-		uint8_t lastPixelValue = 0;
 		uint16_t lineSkip = 0;
 		
-		int prevLineSkipPixels = 0;
-		assert(prevLinePixelsRemaining >= 0);
-		if (prevLinePixelsRemaining)
-		{
-			prevLineSkipPixels = prevLinePixelsRemaining;
-		}
-		prevLinePixelsRemaining = width;
 
 		inStream.read((char*)&opcode, 2);
 		while (opcode & FLC_OPCODE_MASK)
@@ -87,8 +84,7 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 			switch (opcode & FLC_OPCODE_MASK)
 			{
 				case FLC_OPCODE_LAST_PIXEL:
-					hasLastPixel = true;
-					lastPixelValue = (opcode & 0xFF);
+					assert(0);
 					break;
 				case FLC_OPCODE_LINE_SKIP:
 					int16_t *opcodeSigned = (int16_t*)&opcode;
@@ -101,33 +97,16 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 			}
 			inStream.read((char*)&opcode, 2);
 		}
+		line.lineSkip = lineSkip;
 		uint16_t packetCount = opcode;
 
-
-		if (packetCount == 0)
-		{
-			//If no packets, only the last pixel has changed
-			assert(hasLastPixel);
-			DeltaPacket packet;
-			packet.pixelSkip = width - 1 + (width * lineSkip) + prevLineSkipPixels;
-			lineSkip = 0;
-			packet.pixelCount = 1;
-			packet.pixelBytes = new char[1];
-			packet.pixelBytes[0] = lastPixelValue;
-			delta->deltaPackets.push_back(packet);
-		}
 		for (int p = 0; p < packetCount; p++)
 		{
 			DeltaPacket packet;
 			uint8_t pixelSkip;
 			inStream.read((char*)&pixelSkip, 1);
 
-			prevLinePixelsRemaining -= pixelSkip;
-			assert(prevLinePixelsRemaining >= 0);
-
-
-			packet.pixelSkip = ((int)pixelSkip) + (width * lineSkip) + prevLineSkipPixels;
-			lineSkip = 0;
+			packet.pixelSkip = ((int)pixelSkip);
 
 			int8_t count;
 			inStream.read((char*)&count, 1);
@@ -145,16 +124,12 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 				packet.pixelCount = count*2;
 				packet.pixelBytes = new char[count*2];
 				inStream.read((char*)packet.pixelBytes, count*2);
-				prevLinePixelsRemaining -= packet.pixelCount;
-				assert(prevLinePixelsRemaining >= 0);
 			}
 			else if (count < 0)
 			{
 				int copyBytes = -count*2;
 				packet.pixelCount = copyBytes;
 				packet.pixelBytes = new char[copyBytes];
-				prevLinePixelsRemaining -= packet.pixelCount;
-				assert(prevLinePixelsRemaining >= 0);
 				uint16_t copiedWord;
 				inStream.read((char*)&copiedWord, 2);
 				uint16_t *pixelWords = (uint16_t*)packet.pixelBytes;
@@ -169,9 +144,10 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 				assert(0);
 			}
 
-			delta->deltaPackets.push_back(packet);
+			line.packets.push_back(packet);
 		}
-		
+
+		delta->deltaLines.push_back(line);
 	}
 
 	return delta;
@@ -237,10 +213,11 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 		//std::cout << "End of file\n";
 		return new FLCChunk();
 	}
-	//std::cout << "Loading chunk 0x" << std::hex << header.type << std::dec << " size " << header.size << "bytes\n";
+	std::cout << "Loading chunk 0x" << std::hex << header.type << std::dec << " size " << header.size << "bytes\n";
+	std::cout << "offset 0x" << std::hex << inStream.tellg() << std::dec << std::endl;
 	assert(ChunkIDMap.count(header.type) == 1);
 	chunkType = ChunkIDMap[header.type];
-	//std::cout << "Found chunk of type " << ChunkNameMap[chunkType] << " of size " << header.size << std::endl;
+	std::cout << "Found chunk of type " << ChunkNameMap[chunkType] << " of size " << header.size << std::endl;
 
 	switch (chunkType)
 	{
@@ -260,11 +237,14 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 		case CT_BYTE_RUN:
 		{
 			FLCDeltaChunk *frameChunk = new FLCDeltaChunk(imageWidth, imageHeight);
+			DeltaLine line;
+			line.lineSkip = 0;
 			DeltaPacket packet;
 			packet.pixelSkip = 0;
 			packet.pixelCount = imageWidth*imageHeight;
 			packet.pixelBytes = (char*)DecodeRLEFrame(imageWidth, imageHeight, inStream);
-			frameChunk->deltaPackets.push_back(packet);
+			line.packets.push_back(packet);
+			frameChunk->deltaLines.push_back(line);
 			ApplyFrame(*frameChunk);
 			chunk = frameChunk;
 			break;
@@ -361,25 +341,25 @@ int main(int argc, char **argv)
 
 	inFile.read((char*)&flc.header, sizeof(flc.header));
 
-	//std::cout << "FLC header:\n" <<
-	//"\tsize\t=\t" << flc.header.size << std::endl <<
-	//"\ttype\t=\t" << flc.header.type << std::endl <<
-	//"\tframes\t=\t" << flc.header.frames << std::endl <<
-	//"\twidth\t=\t" << flc.header.width << std::endl <<
-	//"\theight\t=\t" << flc.header.height << std::endl <<
-	//"\tdepth\t=\t" << flc.header.depth << std::endl <<
-	//"\tflags\t=\t" << flc.header.flags << std::endl <<
-	//"\tspeed\t=\t" << flc.header.speed << std::endl <<
-	//"\taspect_dx\t=\t" << flc.header.aspect_dx << std::endl <<
-	//"\taspect_dy\t=\t" << flc.header.aspect_dy << std::endl <<
-	//"\text_flags\t=\t" << flc.header.ext_flags << std::endl <<
-	//"\tkeyframes\t=\t" << flc.header.keyframes << std::endl <<
-	//"\ttotalframes\t=\t" << flc.header.totalframes << std::endl <<
-	//"\treq_memory\t=\t" << flc.header.req_memory << std::endl <<
-	//"\tmax_regions\t=\t" << flc.header.max_regions << std::endl <<
-	//"\ttransp_num\t=\t" << flc.header.transp_num << std::endl <<
-	//"\tframe1offset\t=\t" << flc.header.frame1Offset << std::endl <<
-	//"\tframe2offset\t=\t" << flc.header.frame2Offset << std::endl;
+	std::cout << "FLC header:\n" <<
+	"\tsize\t=\t" << flc.header.size << std::endl <<
+	"\ttype\t=\t" << flc.header.type << std::endl <<
+	"\tframes\t=\t" << flc.header.frames << std::endl <<
+	"\twidth\t=\t" << flc.header.width << std::endl <<
+	"\theight\t=\t" << flc.header.height << std::endl <<
+	"\tdepth\t=\t" << flc.header.depth << std::endl <<
+	"\tflags\t=\t" << flc.header.flags << std::endl <<
+	"\tspeed\t=\t" << flc.header.speed << std::endl <<
+	"\taspect_dx\t=\t" << flc.header.aspect_dx << std::endl <<
+	"\taspect_dy\t=\t" << flc.header.aspect_dy << std::endl <<
+	"\text_flags\t=\t" << flc.header.ext_flags << std::endl <<
+	"\tkeyframes\t=\t" << flc.header.keyframes << std::endl <<
+	"\ttotalframes\t=\t" << flc.header.totalframes << std::endl <<
+	"\treq_memory\t=\t" << flc.header.req_memory << std::endl <<
+	"\tmax_regions\t=\t" << flc.header.max_regions << std::endl <<
+	"\ttransp_num\t=\t" << flc.header.transp_num << std::endl <<
+	"\tframe1offset\t=\t" << flc.header.frame1Offset << std::endl <<
+	"\tframe2offset\t=\t" << flc.header.frame2Offset << std::endl;
 
 	vidWidth = flc.header.width;
 	vidHeight = flc.header.height;
