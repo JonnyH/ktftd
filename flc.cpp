@@ -52,6 +52,8 @@ static void ApplyFrame(FLCDeltaChunk &frameDelta)
 		line++;
 	}
 	ktftd::img::PaletteImage frameImg(vidWidth, vidHeight);
+	//Remove the default transparent pixel (idx 0)
+	frameImg.transparentValues.clear();
 	memcpy((char*)frameImg.data.get(), indexedFrameBuffer, vidWidth*vidHeight);
 	ktftd::img::Palette framePalette;
 	memcpy((char*)framePalette.palette, palette, 768);
@@ -206,6 +208,8 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 	FLCChunk *chunk;
 	FLCChunkType chunkType;
 
+	auto streamPos = inStream.tellg();
+
 
 	inStream.read((char*)&header, sizeof(header));
 	if (inStream.bad() || inStream.eof())
@@ -266,6 +270,18 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 			if (skipBytes%2)
 				skipBytes++;
 			inStream.seekg(skipBytes, std::ios::cur);
+	}
+
+	/* check we haven't gone over the chunk size, and pad if we haven't read enough */
+	auto readBytes = inStream.tellg() - streamPos;
+	//TFTD_AUDIO chunks have different header size rules - as it doesn't include teh 6byte chunk + 10byte audio header (=16 bytes smaller)
+	if (chunkType != CT_TFTD_AUDIO)
+	{
+		assert (readBytes <= header.size);
+	}
+	if (readBytes < header.size)
+	{
+		inStream.seekg(header.size-readBytes, std::ios::cur);
 	}
 	return chunk;
 }
