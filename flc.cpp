@@ -23,6 +23,7 @@
 #include <cassert>
 #include <cstring>
 #include <sstream>
+#include <iomanip>
 
 #define FLC_OPCODE_MASK (0xC000)
 #define FLC_OPCODE_PACKET_COUNT (0x0000)
@@ -59,7 +60,7 @@ static void ApplyFrame(FLCDeltaChunk &frameDelta)
 	memcpy((char*)framePalette.palette, palette, 768);
 
 	std::stringstream ss;
-	ss << "out" << frameCount << ".png";
+	ss << "out" << std::setw(6) << std::setfill('0') << frameCount << ".png";
 
 	frameImg.getImage(framePalette).writePNG(ss.str().c_str());
 	frameCount++;
