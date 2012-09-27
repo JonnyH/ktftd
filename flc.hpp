@@ -222,7 +222,6 @@ public:
 	FLCDeltaChunk(int width, int height) : width(width),height(height){}
 	int width;
 	int height;
-	int lineSkip;
 
 
 	std::vector<DeltaPacket> deltaPackets;

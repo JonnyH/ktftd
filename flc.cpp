@@ -22,11 +22,41 @@
 #include <fstream>
 #include <cassert>
 #include <cstring>
+#include <sstream>
 
 #define FLC_OPCODE_MASK (0xC000)
 #define FLC_OPCODE_PACKET_COUNT (0x0000)
 #define FLC_OPCODE_LAST_PIXEL (0x8000)
 #define FLC_OPCODE_LINE_SKIP (0xC000)
+
+
+static char* indexedFrameBuffer;
+static ktftd::img::RGBColor palette[256];
+static int frameCount = 0;
+int vidHeight, vidWidth;
+
+static void ApplyFrame(FLCDeltaChunk &frameDelta)
+{
+	size_t pos = 0;
+	for (auto &deltaPacket : frameDelta.deltaPackets)
+	{
+		pos += deltaPacket.pixelSkip;
+		memcpy((char*)&indexedFrameBuffer[pos], deltaPacket.pixelBytes, deltaPacket.pixelCount);
+		pos += deltaPacket.pixelCount;
+	}
+	ktftd::img::PaletteImage frameImg(vidWidth, vidHeight);
+	memcpy((char*)frameImg.data.get(), indexedFrameBuffer, vidWidth*vidHeight);
+	ktftd::img::Palette framePalette;
+	memcpy((char*)framePalette.palette, palette, sizeof(palette));
+
+	std::stringstream ss;
+	ss << "out" << frameCount << ".png";
+
+	frameImg.getImage(framePalette).writePNG(ss.str().c_str());
+	frameCount++;
+
+	
+}
 
 static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, std::istream &inStream)
 {
@@ -200,17 +230,34 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 			chunk = new FLCFrameTypeChunk(header.size, inStream, imageWidth, imageHeight);
 			break;
 		case CT_COLOR_256:
-			chunk = new FLCChunkColor256(header.size, inStream);
+		{
+			FLCChunkColor256 *paletteChunk = new FLCChunkColor256(header.size, inStream);
+			memcpy((char*)palette, paletteChunk->palette, sizeof(paletteChunk->palette));
+			chunk = paletteChunk;
 			break;
+		}
 		case CT_BYTE_RUN:
-			chunk = new FLCImageChunk(imageWidth, imageHeight, DecodeRLEFrame(imageWidth, imageHeight, inStream));
+		{
+			FLCDeltaChunk *frameChunk = new FLCDeltaChunk(imageWidth, imageHeight);
+			DeltaPacket packet;
+			packet.pixelSkip = 0;
+			packet.pixelCount = imageWidth*imageHeight;
+			packet.pixelBytes = (char*)DecodeRLEFrame(imageWidth, imageHeight, inStream);
+			frameChunk->deltaPackets.push_back(packet);
+			ApplyFrame(*frameChunk);
+			chunk = frameChunk;
 			break;
+		}
 		//case CT_DELTA_FLI:
 		//	chunk = DecodeFLIDeltaFrame(header.size, imageWidth, imageHeight, inStream);
 		//	break;
 		case CT_DELTA_FLC:
-			chunk = DecodeFLCDeltaFrame(header.size, imageWidth, imageHeight, inStream);
+		{
+			auto* deltaFrame = DecodeFLCDeltaFrame(header.size, imageWidth, imageHeight, inStream);
+			ApplyFrame(*deltaFrame);
+			chunk = deltaFrame;
 			break;
+		}
 		default:
 			std::cout << "TODO: Implement chunk type " << ChunkNameMap[chunkType] << std::endl;
 			chunk = new FLCChunk(chunkType, header.size);
@@ -312,6 +359,11 @@ int main(int argc, char **argv)
 	//"\ttransp_num\t=\t" << flc.header.transp_num << std::endl <<
 	//"\tframe1offset\t=\t" << flc.header.frame1Offset << std::endl <<
 	//"\tframe2offset\t=\t" << flc.header.frame2Offset << std::endl;
+
+	vidWidth = flc.header.width;
+	vidHeight = flc.header.height;
+
+	indexedFrameBuffer = new char[flc.header.width*flc.header.height];
 
 	while (inFile.good() || !inFile.eof())
 	{

@@ -23,8 +23,11 @@ target_link_libraries(tftdimg ${PNG_LIBRARY})
 
 set(TFTDFLC_SOURCE_FILES
 				flc.cpp
+				palette_image.cpp
 				)
 
 add_executable(tftdflc ${TFTDFLC_SOURCE_FILES})
+
+target_link_libraries(tftdflc ${PNG_LIBRARY})
 
 
