@@ -25,8 +25,6 @@
 #include <cstdlib>
 #include <cassert>
 
-static const char* outputFileName = "out.png";
-
 void printUsage()
 {
 	std::cout << "Useage:\n" <<
@@ -41,11 +39,14 @@ void printUsage()
 
 int main(int argc, char **argv)
 {
-	if (argc <= 1)
+	if (argc <= 2)
 	{
 		printUsage();
 		return EXIT_SUCCESS;
 	}
+	std::string fileName(argv[2]);
+	std::string outputFileName = fileName.substr(0, fileName.length()-4);
+	outputFileName.append(".png");
 	if (argv[1][0] == 'i')
 	{
 		if (argc <= 2)
@@ -54,7 +55,6 @@ int main(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		std::string fileName(argv[2]);
 
 		int spk = fileName.rfind(".SPK");
 		int bdy = fileName.rfind(".BDY");
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 			}
 			outputImage = palettedImage.getImage(palette);
 		}
-		outputImage.writePNG(outputFileName);
+		outputImage.writePNG(outputFileName.c_str());
 
 	}
 	else if (argv[1][0] == 'p')
@@ -189,9 +189,9 @@ int main(int argc, char **argv)
 			printUsage();
 			return EXIT_FAILURE;
 		}
-
+		
 		auto image = palette.toImage();
-		image.writePNG(outputFileName);
+		image.writePNG(outputFileName.c_str());
 	}
 	else
 	{
