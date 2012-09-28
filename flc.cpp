@@ -218,11 +218,11 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 		//std::cout << "End of file\n";
 		return new FLCChunk();
 	}
-	std::cout << "Loading chunk 0x" << std::hex << header.type << std::dec << " size " << header.size << "bytes\n";
-	std::cout << "offset 0x" << std::hex << inStream.tellg() << std::dec << std::endl;
+	//std::cout << "Loading chunk 0x" << std::hex << header.type << std::dec << " size " << header.size << "bytes\n";
+	//std::cout << "offset 0x" << std::hex << inStream.tellg() << std::dec << std::endl;
 	assert(ChunkIDMap.count(header.type) == 1);
 	chunkType = ChunkIDMap[header.type];
-	std::cout << "Found chunk of type " << ChunkNameMap[chunkType] << " of size " << header.size << std::endl;
+	//std::cout << "Found chunk of type " << ChunkNameMap[chunkType] << " of size " << header.size << std::endl;
 
 	switch (chunkType)
 	{
@@ -264,6 +264,23 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 			chunk = deltaFrame;
 			break;
 		}
+		case CT_FLI_COPY:
+		{
+			auto *frameChunk  = new FLCDeltaChunk(imageWidth, imageHeight);
+			auto pixels = header.size-6;
+			DeltaLine line;
+			line.lineSkip = 0;
+			DeltaPacket packet;
+			packet.pixelSkip = 0;
+			packet.pixelCount = pixels;
+			packet.pixelBytes = new char[pixels];
+			inStream.read(packet.pixelBytes, pixels);
+			line.packets.push_back(packet);
+			frameChunk->deltaLines.push_back(line);
+			ApplyFrame(*frameChunk);
+			chunk = frameChunk;
+			break;
+		};
 		default:
 			std::cout << "TODO: Implement chunk type " << ChunkNameMap[chunkType] << std::endl;
 			chunk = new FLCChunk(chunkType, header.size);
