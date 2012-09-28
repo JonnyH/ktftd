@@ -17,6 +17,7 @@
  */
 
 #include "flc.hpp"
+#include "audio.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -35,6 +36,8 @@ static char* indexedFrameBuffer;
 static ktftd::img::RGBColor palette[256];
 static int frameCount = 0;
 int vidHeight, vidWidth;
+
+ktftd::audio::AudioFile currentAudioSegment;
 
 static void ApplyFrame(FLCDeltaChunk &frameDelta)
 {
@@ -61,11 +64,12 @@ static void ApplyFrame(FLCDeltaChunk &frameDelta)
 
 	std::stringstream ss;
 	ss << "out" << std::setw(6) << std::setfill('0') << frameCount << ".png";
-
 	frameImg.getImage(framePalette).writePNG(ss.str().c_str());
+	//TODO: Better way of resetting stringstream?
+	ss.str()="";
+	ss << "out" << std::setw(6) << std::setfill('0') << frameCount << ".flac";
+	currentAudioSegment.writeFLAC(ss.str().c_str());
 	frameCount++;
-
-	
 }
 
 static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, std::istream &inStream)
@@ -313,6 +317,13 @@ FLCTFTDAudioChunk::FLCTFTDAudioChunk(size_t size, std::istream &inStream)
 	inStream.read((char*)&this->audioHeader, sizeof(this->audioHeader));
 	this->sampleValues = std::unique_ptr<char[]>(new char[size]);
 	inStream.read(this->sampleValues.get(), size);
+	currentAudioSegment.sampleRate = this->audioHeader.sampleRate;
+	currentAudioSegment.channels = 1;
+	currentAudioSegment.sampleCount = size;
+	currentAudioSegment.channelSamples.resize(1);
+	currentAudioSegment.isSignedPCM = false;
+	currentAudioSegment.bitsPerSample = 8;
+	currentAudioSegment.channelSamples[0] = this->sampleValues.get();
 }
 
 FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream, int videoWidth, int videoHeight)

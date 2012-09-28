@@ -306,6 +306,4 @@ public:
 
 
 };
-
-
 #endif //__FLC_HPP
