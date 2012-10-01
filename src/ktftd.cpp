@@ -2,6 +2,7 @@
 #include <GLES2/gl2.h>
 #include "scr.hpp"
 #include "xcui.hpp"
+#include "es2_gfx.hpp"
 
 
 bool quit = false;
@@ -17,6 +18,10 @@ int main(int argc, char **argv)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,0);
 
 	auto ctx = SDL_GL_CreateContext(window);
+
+	auto *gfxDriver = new ktftd::gfx::ES2::ES2GFXDriver(ctx, 640, 480);
+
+	ktftd::gfx::GFXDriver::setGFXDriver(gfxDriver);
 
 	ktftd::ui::UIManager interface(640, 480);
 
@@ -42,6 +47,8 @@ int main(int argc, char **argv)
 		interface.draw();
 
 		SDL_GL_SwapWindow(window);
+		SDL_Delay(3000);
+		quit = true;
 	}
 
 	SDL_GL_DeleteContext(ctx);

@@ -27,13 +27,13 @@ namespace ui
 void
 Window::setBackground(ktftd::img::Image &img)
 {
-
+	this->winTexture = ktftd::gfx::GFXDriver::getGFXDriver().createTexture(img);
 }
 
 void
 Window::draw(int screenSizeX, int screenSizeY)
 {
-
+	ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX, this->posY, this->sizeX, this->sizeY, *this->winTexture.get());
 }
 
 void

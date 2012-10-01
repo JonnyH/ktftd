@@ -19,6 +19,7 @@
 #define __XCUI_HPP
 
 #include "palette_image.hpp"
+#include "gfx.hpp"
 
 #include <set>
 #include <stack>
@@ -99,6 +100,7 @@ public:
 	int posX, posY, sizeX, sizeY;
 
 	std::shared_ptr<Widget> child;
+	std::shared_ptr<ktftd::gfx::Texture> winTexture;
 };
 
 class Dialogue : public Window

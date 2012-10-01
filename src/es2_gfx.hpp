@@ -50,6 +50,14 @@ public:
 private:
 	SDL_GLContext ctx;
 	int viewSizeX, viewSizeY;
+	class
+	{
+	public:
+		GLuint program;
+		GLuint positionAttrib;
+		GLuint texcoordAttrib;
+		GLuint samplerUniform;
+	} blitProgramInfo;
 };
 
 }//namespace ES2
