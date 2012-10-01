@@ -24,3 +24,6 @@ find_package(SDL2 REQUIRED)
 target_link_libraries(ktftd ${SDL2_LIBRARIES})
 include_directories(${SDL2_INCLUDE_DIRS})
 
+find_package(GLESV2 REQUIRED)
+target_link_libraries(ktftd ${GLESV2_LIBRARIES})
+include_directories(${GLESV2_INCLUDE_DIRS})
