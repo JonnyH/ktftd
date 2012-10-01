@@ -168,7 +168,7 @@ public:
 		uint16_t heightOverride;
 	}frameHeader;
 	static_assert(sizeof(frameHeader) == 10, "Expected frameHeader to be 10 bytes");
-	std::vector<FLCChunk*> subChunks;
+	std::vector<std::shared_ptr<FLCChunk>> subChunks;
 	
 };
 
@@ -212,7 +212,7 @@ class DeltaPacket
 public:
 	int pixelSkip;
 	int pixelCount;
-	char* pixelBytes;
+	std::shared_ptr<char> pixelBytes;
 };
 
 class DeltaLine

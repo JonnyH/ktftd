@@ -50,7 +50,7 @@ static void ApplyFrame(FLCDeltaChunk &frameDelta)
 		for (auto &deltaPacket : deltaLine.packets)
 		{
 			pos += deltaPacket.pixelSkip;
-			memcpy((char*)pos, deltaPacket.pixelBytes, deltaPacket.pixelCount);
+			memcpy((char*)pos, deltaPacket.pixelBytes.get(), deltaPacket.pixelCount);
 			pos += deltaPacket.pixelCount;
 		}
 		line++;
@@ -128,18 +128,19 @@ static FLCDeltaChunk* DecodeFLCDeltaFrame(size_t size, int width, int height, st
 
 			if (count > 0)
 			{
-				packet.pixelCount = count*2;
-				packet.pixelBytes = new char[count*2];
-				inStream.read((char*)packet.pixelBytes, count*2);
+				int copyBytes = count*2;
+				packet.pixelCount = copyBytes;
+				packet.pixelBytes = std::shared_ptr<char>(new char[copyBytes]);
+				inStream.read((char*)packet.pixelBytes.get(), count*2);
 			}
 			else if (count < 0)
 			{
 				int copyBytes = -count*2;
 				packet.pixelCount = copyBytes;
-				packet.pixelBytes = new char[copyBytes];
+				packet.pixelBytes = std::shared_ptr<char>(new char[copyBytes]);
 				uint16_t copiedWord;
 				inStream.read((char*)&copiedWord, 2);
-				uint16_t *pixelWords = (uint16_t*)packet.pixelBytes;
+				uint16_t *pixelWords = (uint16_t*)packet.pixelBytes.get();
 				for (int i = 0; i < copyBytes/2; i++)
 				{
 					pixelWords[i] = copiedWord;
@@ -199,6 +200,7 @@ static uint8_t* DecodeRLEFrame(int width, int height, std::istream &inStream)
 			}
 		}
 		memcpy(outputBytes+(width*y), outLine, width);
+		delete[] outLine;
 		x = 0;
 	}
 
@@ -251,7 +253,7 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 			DeltaPacket packet;
 			packet.pixelSkip = 0;
 			packet.pixelCount = imageWidth*imageHeight;
-			packet.pixelBytes = (char*)DecodeRLEFrame(imageWidth, imageHeight, inStream);
+			packet.pixelBytes = std::shared_ptr<char>((char*)DecodeRLEFrame(imageWidth, imageHeight, inStream));
 			line.packets.push_back(packet);
 			frameChunk->deltaLines.push_back(line);
 			ApplyFrame(*frameChunk);
@@ -277,8 +279,8 @@ FLCChunk *loadChunk(std::istream &inStream, int imageWidth, int imageHeight)
 			DeltaPacket packet;
 			packet.pixelSkip = 0;
 			packet.pixelCount = pixels;
-			packet.pixelBytes = new char[pixels];
-			inStream.read(packet.pixelBytes, pixels);
+			packet.pixelBytes = std::shared_ptr<char>(new char[pixels]);
+			inStream.read((char*)packet.pixelBytes.get(), pixels);
 			line.packets.push_back(packet);
 			frameChunk->deltaLines.push_back(line);
 			ApplyFrame(*frameChunk);
@@ -344,7 +346,7 @@ FLCFrameTypeChunk::FLCFrameTypeChunk(size_t size, std::istream &inStream, int vi
 
 	for (int chunk = 0; chunk < this->frameHeader.chunks; chunk++)
 	{
-		this->subChunks[chunk] = loadChunk(inStream, frameWidth, frameHeight);
+		this->subChunks[chunk] = std::shared_ptr<FLCChunk>(loadChunk(inStream, frameWidth, frameHeight));
 	}
 }
 
@@ -410,10 +412,11 @@ int main(int argc, char **argv)
 	vidHeight = flc.header.height;
 
 	indexedFrameBuffer = new char[flc.header.width*flc.header.height];
+	std::vector<std::shared_ptr<FLCChunk> > chunks;
 
 	while (inFile.good() || !inFile.eof())
 	{
-		loadChunk(inFile, flc.header.width, flc.header.height);
+		chunks.push_back(std::shared_ptr<FLCChunk>(loadChunk(inFile, flc.header.width, flc.header.height)));
 	}
 
 
