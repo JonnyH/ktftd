@@ -56,11 +56,11 @@ int main(int argc, char **argv)
 		}
 
 
-		int spk = fileName.rfind(".SPK");
-		int bdy = fileName.rfind(".BDY");
-		int scr = fileName.rfind(".SCR");
-		int dat = fileName.rfind(".DAT");
-		int lbm = fileName.rfind(".LBM");
+		auto spk = fileName.rfind(".SPK");
+		auto bdy = fileName.rfind(".BDY");
+		auto scr = fileName.rfind(".SCR");
+		auto dat = fileName.rfind(".DAT");
+		auto lbm = fileName.rfind(".LBM");
 
 		bool requiresPalette;
 
@@ -119,8 +119,8 @@ int main(int argc, char **argv)
 				return EXIT_FAILURE;
 			}
 			std::string paletteName (argv[3]);
-			int dat = paletteName.rfind(".DAT");
-			int lbm = paletteName.rfind(".LBM");
+			auto dat = paletteName.rfind(".DAT");
+			auto lbm = paletteName.rfind(".LBM");
 			if (dat == paletteName.length() - 4)
 			{
 				std::cout << "Is dat palette\n";
