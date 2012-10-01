@@ -7,6 +7,8 @@ set(KTFTDUTIL_SOURCE_FILES
 				scr.cpp
 				spk.cpp
 				audio.cpp
+				xcui.cpp
+				gfx.cpp
 )
 
 add_library(ktftdutil ${KTFTDUTIL_SOURCE_FILES})

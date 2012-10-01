@@ -9,6 +9,7 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 set(KTFTD_SOURCE_FILES
 				src/ktftd.cpp
+				src/es2_gfx.cpp
 				)
 
 include_directories("${PROJECT_SOURCE_DIR}/inc")

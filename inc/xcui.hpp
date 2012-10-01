@@ -24,7 +24,7 @@
 #include <stack>
 #include <functional>
 
-namespace ktftf
+namespace ktftd
 {
 namespace ui
 {
@@ -90,9 +90,13 @@ public:
 class Window
 {
 public:
-	Window(int posX, int posY, int sizeX, int sizeY);
+	Window(int posX, int posY, int sizeX, int sizeY) : posX(posX),posY(posY),sizeX(sizeX),sizeY(sizeY){}
 	void setBackground(ktftd::img::RGBAColor color);
 	void setBackground(ktftd::img::Image &image);
+
+	void draw(int screenSizeX, int screenSizeY);
+
+	int posX, posY, sizeX, sizeY;
 
 	std::shared_ptr<Widget> child;
 };
@@ -108,8 +112,12 @@ public:
 class UIManager
 {
 public:
+	UIManager(int sizeX, int sizeY) : sizeX(sizeX),sizeY(sizeY){}
 	std::set<std::shared_ptr<Window> > windows;
 	std::stack<std::shared_ptr<Dialogue> > dialogueStack;
+	void draw();
+
+	int sizeX, sizeY;
 
 };
 
