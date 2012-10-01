@@ -24,6 +24,8 @@
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <vector>
+#include <cstring>
 
 namespace ktftd
 {
@@ -74,6 +76,13 @@ namespace img
 			//By default, in XCOM color idx 0 is transparent
 			this->transparentValues.insert(0);
 		}
+		PaletteImage(uint32_t sizeX, uint32_t sizeY, uint8_t *data) : sizeX(sizeX),sizeY(sizeY),data(new uint8_t[sizeX*sizeY])
+		{
+			//By default, in XCOM color idx 0 is transparent
+			this->transparentValues.insert(0);
+			memcpy(this->data.get(), data, sizeX*sizeY);
+		}
+
 		uint32_t sizeX;
 		uint32_t sizeY;
 		std::unique_ptr<uint8_t[]> data;
@@ -82,6 +91,16 @@ namespace img
 		std::set<uint8_t> transparentValues;
 
 		Image getImage(Palette &palette);
+	};
+
+	class PaletteFont
+	{
+	public:
+		PaletteFont(){}
+		PaletteFont(uint32_t sizeX, uint32_t sizeY, uint32_t startASCII) : sizeX(sizeX),sizeY(sizeY),startASCII(startASCII),endASCII(startASCII)	{}
+		uint32_t sizeX, sizeY, startASCII;
+		uint32_t endASCII;
+		std::vector<PaletteImage> characterImages;
 	};
 
 	Palette LoadPalette(std::istream &inStream, int paletteNo);

@@ -28,6 +28,14 @@ namespace ktftd
 namespace img
 {
 	PaletteImage LoadSCRImage(std::istream &inStream);
+	
+	enum FontSize
+	{
+		FONTSIZE_SMALL,//8x9
+		FONTSIZE_BIG//16x16
+	};
+
+	PaletteFont LoadFont(std::istream &inStream, FontSize size);
 }//namespace img
 }//namespace ktftd
 

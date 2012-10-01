@@ -24,6 +24,8 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <sstream>
+#include <iomanip>
 
 void printUsage()
 {
@@ -31,6 +33,7 @@ void printUsage()
 		"\tDump image:\n" <<
 		"\t\ttftdimg i [file.{spk,bdy,scr,dat}] [palette.dat] [palette offset]\n" <<
 		"\t\ttftdimg i [file.{spk,bdy,scr,dat}] [palette.lbm]\n" <<
+		"\t\ttftdimg f [file.dat] [{s,b}] [pallete.dat] [palette offset]\n" <<
 		"\t\ttftdimg i [file.lbm]\n" <<
 		"\tDump palette:\n" <<
 		"\t\ttftdimg p [palette.dat] [palette.offset]\n" <<
@@ -47,7 +50,42 @@ int main(int argc, char **argv)
 	std::string fileName(argv[2]);
 	std::string outputFileName = fileName.substr(0, fileName.length()-4);
 	outputFileName.append(".png");
-	if (argv[1][0] == 'i')
+	if (argv[1][0] == 'f')
+	{
+		if (argc <= 5)
+		{
+			printUsage();
+			return EXIT_SUCCESS;
+		}
+		std::ifstream inFile(fileName);
+		ktftd::img::FontSize size;
+		switch (argv[3][0])
+		{
+			case 's':
+				size = ktftd::img::FONTSIZE_SMALL;
+				break;
+			case 'b':
+				size = ktftd::img::FONTSIZE_BIG;
+				break;
+			default:
+				printUsage();
+				return EXIT_FAILURE;
+		}
+		auto font = ktftd::img::LoadFont(inFile, size);
+		std::string paletteName(argv[4]);
+		int paletteOffset = atoi(argv[5]);
+		std::ifstream paletteFile(paletteName);
+		auto palette = ktftd::img::LoadPalette(paletteFile, paletteOffset);
+
+		for (unsigned int c = font.startASCII; c < font.endASCII; c++)
+		{
+			std::stringstream ss;
+			ss << "char" << std::setw(3) << std::setfill('0') << c << ".png";
+			auto outputImage = font.characterImages[c-font.startASCII].getImage(palette);
+			outputImage.writePNG(ss.str().c_str());
+		}
+	}
+	else if (argv[1][0] == 'i')
 	{
 		if (argc <= 2)
 		{
