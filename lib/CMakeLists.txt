@@ -6,6 +6,7 @@ set(KTFTDUTIL_SOURCE_FILES
 				palette_image.cpp
 				scr.cpp
 				spk.cpp
+				audio.cpp
 )
 
 add_library(ktftdutil ${KTFTDUTIL_SOURCE_FILES})
@@ -14,4 +15,5 @@ find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIR})
 include_directories("${PROJECT_SOURCE_DIR}/inc")
 target_link_libraries(ktftdutil ${PNG_LIBRARY})
+target_link_libraries(ktftdutil FLAC++)
 				
