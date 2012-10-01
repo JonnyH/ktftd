@@ -31,7 +31,12 @@ namespace ktftd
 {
 namespace img
 {
-
+	//FIXME: Put Fontsize somewhere else?
+	enum FontSize
+	{
+		FONTSIZE_SMALL,//8x9
+		FONTSIZE_BIG//16x16
+	};
 	class RGBColor
 	{
 	public:

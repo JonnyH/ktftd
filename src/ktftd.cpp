@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <GLES2/gl2.h>
+#include "xcui.hpp"
 
 int main(int argc, char **argv)
 {
