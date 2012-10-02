@@ -41,12 +41,20 @@ public:
 	GLuint glTexID;
 };
 
+class ES2Palette : public Palette
+{
+public:
+	int size;
+	GLuint glTexID;
+};
+
 class ES2GFXDriver : public GFXDriver
 {
 public:
 	ES2GFXDriver(SDL_GLContext ctx, int winSizeX, int winSizeY);
-	virtual std::shared_ptr<Texture> createTexture(ktftd::img::Image &img);
-	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex, bool scale = false);
+	virtual std::shared_ptr<Texture> createTexture(ktftd::img::PaletteImage &img);
+	virtual std::shared_ptr<Palette> createPalette(ktftd::img::Palette &palette);
+	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex, Palette &palette, bool scale = false);
 	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, ktftd::img::RGBAColor &color);
 private:
 	SDL_GLContext ctx;
@@ -57,7 +65,8 @@ private:
 		GLuint program;
 		GLuint positionAttrib;
 		GLuint texcoordAttrib;
-		GLuint samplerUniform;
+		GLuint texSamplerUniform;
+		GLuint paletteSamplerUniform;
 		GLuint scaleUniform;
 	} blitTexProgramInfo;
 	class

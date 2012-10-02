@@ -109,7 +109,7 @@ class Window
 public:
 	Window(int posX, int posY, int sizeX, int sizeY) : posX(posX),posY(posY),sizeX(sizeX),sizeY(sizeY),border(true),scale(false){}
 	void setBackground(ktftd::img::RGBAColor color);
-	void setBackground(ktftd::img::Image &image);
+	void setBackground(ktftd::img::PaletteImage &image, ktftd::img::Palette &palette);
 
 	void draw(int screenSizeX, int screenSizeY);
 
@@ -119,6 +119,7 @@ public:
 
 	std::shared_ptr<Widget> child;
 	std::shared_ptr<ktftd::gfx::Texture> winTexture;
+	std::shared_ptr<ktftd::gfx::Palette> winPalette;
 };
 
 class Dialogue : public Window

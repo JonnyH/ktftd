@@ -25,9 +25,10 @@ namespace ui
 {
 
 void
-Window::setBackground(ktftd::img::Image &img)
+Window::setBackground(ktftd::img::PaletteImage &img, ktftd::img::Palette &palette)
 {
 	this->winTexture = ktftd::gfx::GFXDriver::getGFXDriver().createTexture(img);
+	this->winPalette = ktftd::gfx::GFXDriver::getGFXDriver().createPalette(palette);
 }
 
 void
@@ -48,7 +49,7 @@ Window::draw(int screenSizeX, int screenSizeY)
 		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+4, this->posY+4, this->sizeX-8, this->sizeY-8, color);
 
 	}
-	ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+5, this->posY+5, this->sizeX-10, this->sizeY-10, *this->winTexture.get());
+	ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+5, this->posY+5, this->sizeX-10, this->sizeY-10, *this->winTexture.get(), *this->winPalette.get());
 }
 
 void

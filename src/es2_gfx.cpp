@@ -62,11 +62,14 @@ const std::string blitTexVertShaderSource =
 	"}\n";
 
 const std::string blitTexFragShaderSource =
-	"uniform sampler2D u_sampler;\n" \
+	"uniform sampler2D u_texSampler;\n" \
+	"uniform sampler2D u_paletteSampler;\n" \
 	"varying vec2 v_texcoord;\n" \
 	"void main()\n" \
 	"{\n" \
-	" gl_FragColor = texture2D(u_sampler, v_texcoord);\n" \
+	" float paletteValue = texture2D(u_texSampler, v_texcoord).x;\n" \
+	" gl_FragColor = texture2D(u_paletteSampler, vec2(paletteValue, 0));\n"\
+	" //gl_FragColor = texture2D(u_paletteSampler, v_texcoord);\n" \
 	"}\n";
 
 const std::string blitColorVertShaderSource = 
@@ -148,7 +151,8 @@ ES2GFXDriver::ES2GFXDriver(SDL_GLContext ctx, int winSizeX, int winSizeY)
 
 	this->blitTexProgramInfo.program = LinkProgram(blitTexVertShader, blitTexFragShader);
 
-	this->blitTexProgramInfo.samplerUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_sampler");
+	this->blitTexProgramInfo.texSamplerUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_texSampler");
+	this->blitTexProgramInfo.paletteSamplerUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_paletteSampler");
 	this->blitTexProgramInfo.scaleUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_scale");
 	this->blitTexProgramInfo.texcoordAttrib = glGetAttribLocation(this->blitTexProgramInfo.program, "a_texcoord");
 	this->blitTexProgramInfo.positionAttrib = glGetAttribLocation(this->blitTexProgramInfo.program, "a_position");
@@ -166,7 +170,7 @@ ES2GFXDriver::ES2GFXDriver(SDL_GLContext ctx, int winSizeX, int winSizeY)
 }
 
 std::shared_ptr<Texture>
-ES2GFXDriver::createTexture(ktftd::img::Image &img)
+ES2GFXDriver::createTexture(ktftd::img::PaletteImage &img)
 {
 	ES2Texture *tex = new ES2Texture();
 
@@ -176,11 +180,29 @@ ES2GFXDriver::createTexture(ktftd::img::Image &img)
 	glGenTextures(1, &tex->glTexID);
 	glBindTexture(GL_TEXTURE_2D, tex->glTexID);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->sizeX, tex->sizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const GLvoid*)img.data.get());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, tex->sizeX, tex->sizeY, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, (const GLvoid*)img.data.get());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	return std::shared_ptr<ES2Texture>(tex);
+}
+
+std::shared_ptr<Palette>
+ES2GFXDriver::createPalette(ktftd::img::Palette &palette)
+{
+	ES2Palette *pal = new ES2Palette();
+	glGenTextures(1, &pal->glTexID);
+	glBindTexture(GL_TEXTURE_2D, pal->glTexID);
+	pal->size = 256;
+	palette.toImage().writePNG("test.out");
+
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, pal->size, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, (const GLvoid*)&palette.palette[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	return std::shared_ptr<ES2Palette>(pal);
 }
 
 void
@@ -220,9 +242,10 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, ktftd::img::RGB
 }
 
 void
-ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex, bool scale)
+ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex, Palette &palette, bool scale)
 {
 	ES2Texture &es2Tex = static_cast<ES2Texture&>(tex);
+	ES2Palette &es2Pal = static_cast<ES2Palette&>(palette);
 	float x1, x2, y1, y2;
 
 	x1 = (float)posX / (float)this->viewSizeX;
@@ -257,12 +280,16 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex, b
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, es2Tex.glTexID);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, es2Pal.glTexID);
 	
 	glEnableVertexAttribArray(this->blitTexProgramInfo.positionAttrib);
 	glVertexAttribPointer(this->blitTexProgramInfo.positionAttrib, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0][0]);
 	glEnableVertexAttribArray(this->blitTexProgramInfo.texcoordAttrib);
 	glVertexAttribPointer(this->blitTexProgramInfo.texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0][0]);
-	glUniform1i(this->blitTexProgramInfo.samplerUniform, 0);
+	glUniform1i(this->blitTexProgramInfo.texSamplerUniform, 0);
+	glUniform1i(this->blitTexProgramInfo.paletteSamplerUniform, 1);
 
 	if (scale)
 	{

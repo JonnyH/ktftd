@@ -28,6 +28,11 @@ Texture::~Texture()
 
 }
 
+Palette::~Palette()
+{
+
+}
+
 static GFXDriver *g_driver = NULL;
 
 GFXDriver&

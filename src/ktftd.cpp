@@ -25,26 +25,24 @@ int main(int argc, char **argv)
 
 	ktftd::ui::UIManager interface(640, 400);
 
-	std::ifstream backgroundImageStream("./TFD/GEOGRAPH/BACK01.SCR");
-	std::ifstream background2ImageStream("./TFD/GEOGRAPH/BACK02.SCR");
+	std::ifstream backgroundImageStream("./TFD/GEOGRAPH/BACK05.SCR");
+	std::ifstream background2ImageStream("./TFD/GEOGRAPH/BACK05.SCR");
 	std::ifstream palettesStream("./TFD/GEODATA/PALETTES.DAT");
 
-	auto backgroundImagePaletted = ktftd::img::LoadSCRImage(backgroundImageStream);
+	auto backgroundImage= ktftd::img::LoadSCRImage(backgroundImageStream);
 	auto backgroundImagePalette = ktftd::img::LoadPalette(palettesStream, 0);
-	auto background2ImagePaletted = ktftd::img::LoadSCRImage(background2ImageStream);
+	auto background2Image= ktftd::img::LoadSCRImage(background2ImageStream);
 
-	auto backgroundImage = backgroundImagePaletted.getImage(backgroundImagePalette);
-	auto background2Image = background2ImagePaletted.getImage(backgroundImagePalette);
 
 	auto backgroundWindow = std::shared_ptr<ktftd::ui::Window>(new ktftd::ui::Window(0, 0, 640, 400));
 
-	backgroundWindow->setBackground(backgroundImage);
+	backgroundWindow->setBackground(backgroundImage, backgroundImagePalette);
 
 	interface.windows.insert(backgroundWindow);
 
-	auto dialogue = std::shared_ptr<ktftd::ui::Dialogue>(new ktftd::ui::Dialogue(50, 50, 340, 300));
+	auto dialogue = std::shared_ptr<ktftd::ui::Dialogue>(new ktftd::ui::Dialogue(50, 50, 540, 300));
 	dialogue->border = true;
-	dialogue->setBackground(background2Image);
+	dialogue->setBackground(background2Image, backgroundImagePalette);
 
 	interface.dialogueStack.push_back(dialogue);
 
