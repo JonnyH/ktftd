@@ -6,6 +6,10 @@ option (BUILD_KTFTDVID
 				"Build ktftdvid - a tool for loading and converting tftd video
 				resources" ON)
 
+option (BUILD_KTFTDSND
+				"Build ktftdsnd - a tool for loading and converting tftd audio
+				resources" ON)
+
 if (BUILD_KTFTDIMG)
 	set (KTFTDIMG_SOURCE_FILES
 					img.cpp)
@@ -19,3 +23,10 @@ if (BUILD_KTFTDVID)
 	add_executable(ktftdvid ${KTFTDVID_SOURCE_FILES})
 	target_link_libraries(ktftdvid ktftdutil)
 endif (BUILD_KTFTDVID)
+
+if (BUILD_KTFTDSND)
+				set (KTFTDSND_SOURCE_FILES
+					snd.cpp)
+	add_executable(ktftdsnd ${KTFTDSND_SOURCE_FILES})
+	target_link_libraries(ktftdsnd ktftdutil)
+endif(BUILD_KTFTDSND)
