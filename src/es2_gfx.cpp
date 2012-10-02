@@ -49,8 +49,8 @@ const std::string blitVertShaderSource =
 	"varying vec2 v_texcoord;\n" \
 	"void main()\n" \
 	"{\n" \
-	" gl_Position = vec4(a_position.x,a_position.y,0,0);\n" \
 	" v_texcoord = a_texcoord;\n" \
+	" gl_Position = vec4(a_position.x,a_position.y,0,1);\n" \
 	"}\n";
 
 const std::string blitFragShaderSource =
@@ -144,6 +144,8 @@ ES2GFXDriver::createTexture(ktftd::img::Image &img)
 	glBindTexture(GL_TEXTURE_2D, tex->glTexID);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->sizeX, tex->sizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const GLvoid*)img.data.get());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	return std::shared_ptr<ES2Texture>(tex);
 }
@@ -156,24 +158,28 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
 	float x1, x2, y1, y2;
 
 	x1 = (float)posX / (float)this->viewSizeX;
+	x1 = x1 * 2.0f - 1.0f;
 	x2 = (float)(posX+sizeX) / (float)this->viewSizeX;
-	y1 = (float)posY / (float)this->viewSizeY;
-	y2 = (float)(posY+sizeY) / (float)this->viewSizeY;
+	x2 = x2 * 2.0f - 1.0f;
+	y1 = (1.0f)-(float)posY / (float)this->viewSizeY;
+	y1 = y1 * 2.0f - 1.0f;
+	y2 = (1.0f)-(float)(posY+sizeY) / (float)this->viewSizeY;
+	y2 = y2 * 2.0f - 1.0f;
 
 	float vertices[4][2] = 
 	{
+		{x2,y1},
 		{x1,y1},
-		{x1,y2},
 		{x2,y2},
-		{x2,y1}
+		{x1,y2}
 	};
 
 	float texCoords[4][2] =
 	{
+		{1.0f,0.0f},
 		{0.0f,0.0f},
-		{0.0f,1.0f},
 		{1.0f,1.0f},
-		{1.0f,0.0f}
+		{0.0f,1.0f}
 	};
 
 	glUseProgram(this->blitProgramInfo.program);
@@ -184,8 +190,11 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, es2Tex.glTexID);
 	
+	glEnableVertexAttribArray(this->blitProgramInfo.positionAttrib);
 	glVertexAttribPointer(this->blitProgramInfo.positionAttrib, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0][0]);
+	glEnableVertexAttribArray(this->blitProgramInfo.texcoordAttrib);
 	glVertexAttribPointer(this->blitProgramInfo.texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0][0]);
+	glUniform1i(this->blitProgramInfo.samplerUniform, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

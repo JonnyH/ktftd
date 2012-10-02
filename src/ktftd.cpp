@@ -12,14 +12,14 @@ int main(int argc, char **argv)
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
 
 
-	auto *window = SDL_CreateWindow("KTFTD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL);
+	auto *window = SDL_CreateWindow("KTFTD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_OPENGL);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,0);
 
 	auto ctx = SDL_GL_CreateContext(window);
 
-	auto *gfxDriver = new ktftd::gfx::ES2::ES2GFXDriver(ctx, 640, 480);
+	auto *gfxDriver = new ktftd::gfx::ES2::ES2GFXDriver(ctx, 640, 400);
 
 	ktftd::gfx::GFXDriver::setGFXDriver(gfxDriver);
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
 	auto backgroundImage = backgroundImagePaletted.getImage(backgroundImagePalette);
 
-	auto backgroundWindow = std::shared_ptr<ktftd::ui::Window>(new ktftd::ui::Window(0, 0, 640, 480));
+	auto backgroundWindow = std::shared_ptr<ktftd::ui::Window>(new ktftd::ui::Window(0, 0, 640, 400));
 
 	backgroundWindow->setBackground(backgroundImage);
 
