@@ -50,7 +50,7 @@ class Widget
 public:
 	virtual void draw(int offsetX, int offsetY, int sizeX, int sizeY) = 0;
 	virtual ~Widget() = 0;
-	virtual void SendEvent(Event &event);
+	virtual void SendEvent(Event event);
 
 };
 
@@ -137,8 +137,10 @@ public:
 	std::set<std::shared_ptr<Window> > windows;
 	std::list<std::shared_ptr<Dialogue> > dialogueStack;
 	void draw();
+	void SendEvent(Event event);
 
 	int sizeX, sizeY;
+	std::shared_ptr<Widget> keyboardFocus;
 
 };
 

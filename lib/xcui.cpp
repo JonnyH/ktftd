@@ -65,6 +65,12 @@ UIManager::draw()
 	}
 }
 
+void
+UIManager::SendEvent(Event event)
+{
+
+}
+
 
 }//namespace ui
 }//namespace ktftd
