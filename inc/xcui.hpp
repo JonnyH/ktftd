@@ -91,13 +91,14 @@ public:
 class Window
 {
 public:
-	Window(int posX, int posY, int sizeX, int sizeY) : posX(posX),posY(posY),sizeX(sizeX),sizeY(sizeY){}
+	Window(int posX, int posY, int sizeX, int sizeY) : posX(posX),posY(posY),sizeX(sizeX),sizeY(sizeY),border(true){}
 	void setBackground(ktftd::img::RGBAColor color);
 	void setBackground(ktftd::img::Image &image);
 
 	void draw(int screenSizeX, int screenSizeY);
 
 	int posX, posY, sizeX, sizeY;
+	bool border;
 
 	std::shared_ptr<Widget> child;
 	std::shared_ptr<ktftd::gfx::Texture> winTexture;

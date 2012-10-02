@@ -43,7 +43,7 @@ ES2Texture::~ES2Texture()
 
 }
 
-const std::string blitVertShaderSource = 
+const std::string blitTexVertShaderSource = 
 	"attribute vec2 a_position;\n" \
 	"attribute vec2 a_texcoord;\n" \
 	"varying vec2 v_texcoord;\n" \
@@ -53,13 +53,27 @@ const std::string blitVertShaderSource =
 	" gl_Position = vec4(a_position.x,a_position.y,0,1);\n" \
 	"}\n";
 
-const std::string blitFragShaderSource =
+const std::string blitTexFragShaderSource =
 	"uniform sampler2D u_sampler;\n" \
 	"varying vec2 v_texcoord;\n" \
 	"void main()\n" \
 	"{\n" \
 	" gl_FragColor = texture2D(u_sampler, v_texcoord);\n" \
 	"}\n";
+
+const std::string blitColorVertShaderSource = 
+"attribute vec2 a_position;\n" \
+"void main()\n" \
+"{\n" \
+" gl_Position = vec4(a_position.x,a_position.y,0,1);\n" \
+"}\n";
+
+const std::string blitColorFragShaderSource =
+"uniform vec4 u_color;\n" \
+"void main()\n" \
+"{\n" \
+" gl_FragColor = u_color;\n" \
+"}\n";
 
 
 static GLuint CompileShader(GLenum shaderType, const std::string source)
@@ -120,15 +134,25 @@ static GLuint LinkProgram(GLuint vertShader, GLuint fragShader)
 ES2GFXDriver::ES2GFXDriver(SDL_GLContext ctx, int winSizeX, int winSizeY)
 	: ctx(ctx),viewSizeX(winSizeX),viewSizeY(winSizeY)
 {
-	GLuint blitVertShader = CompileShader(GL_VERTEX_SHADER, blitVertShaderSource);
+	GLuint blitTexVertShader = CompileShader(GL_VERTEX_SHADER, blitTexVertShaderSource);
 
-	GLuint blitFragShader = CompileShader(GL_FRAGMENT_SHADER, blitFragShaderSource);
+	GLuint blitTexFragShader = CompileShader(GL_FRAGMENT_SHADER, blitTexFragShaderSource);
 
-	this->blitProgramInfo.program = LinkProgram(blitVertShader, blitFragShader);
+	this->blitTexProgramInfo.program = LinkProgram(blitTexVertShader, blitTexFragShader);
 
-	this->blitProgramInfo.samplerUniform = glGetUniformLocation(this->blitProgramInfo.program, "u_sampler");
-	this->blitProgramInfo.texcoordAttrib = glGetAttribLocation(this->blitProgramInfo.program, "a_texcoord");
-	this->blitProgramInfo.positionAttrib = glGetAttribLocation(this->blitProgramInfo.program, "a_position");
+	this->blitTexProgramInfo.samplerUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_sampler");
+	this->blitTexProgramInfo.texcoordAttrib = glGetAttribLocation(this->blitTexProgramInfo.program, "a_texcoord");
+	this->blitTexProgramInfo.positionAttrib = glGetAttribLocation(this->blitTexProgramInfo.program, "a_position");
+	
+	
+	GLuint blitColorVertShader = CompileShader(GL_VERTEX_SHADER, blitColorVertShaderSource);
+
+	GLuint blitColorFragShader = CompileShader(GL_FRAGMENT_SHADER, blitColorFragShaderSource);
+
+	this->blitColorProgramInfo.program = LinkProgram(blitColorVertShader, blitColorFragShader);
+
+	this->blitColorProgramInfo.colorUniform = glGetUniformLocation(this->blitColorProgramInfo.program, "u_color");
+	this->blitColorProgramInfo.positionAttrib = glGetAttribLocation(this->blitColorProgramInfo.program, "a_position");
 
 }
 
@@ -150,6 +174,41 @@ ES2GFXDriver::createTexture(ktftd::img::Image &img)
 	return std::shared_ptr<ES2Texture>(tex);
 }
 
+void
+ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, ktftd::img::RGBAColor &color)
+{
+	float x1, x2, y1, y2;
+	
+	x1 = (float)posX / (float)this->viewSizeX;
+	x1 = x1 * 2.0f - 1.0f;
+	x2 = (float)(posX+sizeX) / (float)this->viewSizeX;
+	x2 = x2 * 2.0f - 1.0f;
+	y1 = (1.0f)-(float)posY / (float)this->viewSizeY;
+	y1 = y1 * 2.0f - 1.0f;
+	y2 = (1.0f)-(float)(posY+sizeY) / (float)this->viewSizeY;
+	y2 = y2 * 2.0f - 1.0f;
+	
+	float vertices[4][2] = 
+	{
+		{x2,y1},
+		{x1,y1},
+		{x2,y2},
+		{x1,y2}
+	};
+	
+	glUseProgram(this->blitColorProgramInfo.program);
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glEnableVertexAttribArray(this->blitColorProgramInfo.positionAttrib);
+	glVertexAttribPointer(this->blitColorProgramInfo.positionAttrib, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0][0]);
+	glUniform4f(this->blitColorProgramInfo.colorUniform, (float)color.r/255.0f, (float)color.g/255.0f, (float)color.b/255.0f, (float)color.a/255.0f);
+	
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+
+}
 
 void
 ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
@@ -182,7 +241,7 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
 		{0.0f,1.0f}
 	};
 
-	glUseProgram(this->blitProgramInfo.program);
+	glUseProgram(this->blitTexProgramInfo.program);
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -190,11 +249,11 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, es2Tex.glTexID);
 	
-	glEnableVertexAttribArray(this->blitProgramInfo.positionAttrib);
-	glVertexAttribPointer(this->blitProgramInfo.positionAttrib, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0][0]);
-	glEnableVertexAttribArray(this->blitProgramInfo.texcoordAttrib);
-	glVertexAttribPointer(this->blitProgramInfo.texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0][0]);
-	glUniform1i(this->blitProgramInfo.samplerUniform, 0);
+	glEnableVertexAttribArray(this->blitTexProgramInfo.positionAttrib);
+	glVertexAttribPointer(this->blitTexProgramInfo.positionAttrib, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0][0]);
+	glEnableVertexAttribArray(this->blitTexProgramInfo.texcoordAttrib);
+	glVertexAttribPointer(this->blitTexProgramInfo.texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0][0]);
+	glUniform1i(this->blitTexProgramInfo.samplerUniform, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

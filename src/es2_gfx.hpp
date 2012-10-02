@@ -47,6 +47,7 @@ public:
 	ES2GFXDriver(SDL_GLContext ctx, int winSizeX, int winSizeY);
 	virtual std::shared_ptr<Texture> createTexture(ktftd::img::Image &img);
 	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex);
+	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, ktftd::img::RGBAColor &color);
 private:
 	SDL_GLContext ctx;
 	int viewSizeX, viewSizeY;
@@ -57,7 +58,14 @@ private:
 		GLuint positionAttrib;
 		GLuint texcoordAttrib;
 		GLuint samplerUniform;
-	} blitProgramInfo;
+	} blitTexProgramInfo;
+	class
+	{
+	public:
+		GLuint program;
+		GLuint positionAttrib;
+		GLuint colorUniform;
+	} blitColorProgramInfo;
 };
 
 }//namespace ES2

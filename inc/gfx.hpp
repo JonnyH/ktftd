@@ -41,6 +41,7 @@ class GFXDriver
 public:
 	virtual std::shared_ptr<Texture> createTexture(ktftd::img::Image &img) = 0;
 	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex) = 0;
+	virtual void DrawRect(int posX, int posY, int sizeX, int sizeY, ktftd::img::RGBAColor &color) = 0;
 
 	static GFXDriver& getGFXDriver();
 	static void setGFXDriver(GFXDriver *drv);
