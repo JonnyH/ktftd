@@ -5,11 +5,11 @@
 #include "es2_gfx.hpp"
 
 
-bool quit = false;
 
 int main(int argc, char **argv)
 {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+	bool quit = false;
 
 
 	auto *window = SDL_CreateWindow("KTFTD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_OPENGL);
@@ -43,6 +43,11 @@ int main(int argc, char **argv)
 	auto dialogue = std::shared_ptr<ktftd::ui::Dialogue>(new ktftd::ui::Dialogue(50, 50, 540, 300));
 	dialogue->border = true;
 	dialogue->setBackground(background2Image, backgroundImagePalette);
+
+	auto button = std::shared_ptr<ktftd::ui::Button>(new ktftd::ui::Button("test"));
+	dialogue->child = button;
+
+	button->mouseUpFn = [&quit](){quit = true;};
 
 	interface.dialogueStack.push_back(dialogue);
 

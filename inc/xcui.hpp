@@ -49,7 +49,7 @@ class Widget
 {
 public:
 	virtual void draw(int offsetX, int offsetY, int sizeX, int sizeY) = 0;
-	virtual ~Widget() = 0;
+	virtual ~Widget();
 	virtual void SendEvent(Event event);
 
 };
@@ -83,18 +83,20 @@ enum TextAlignment
 class Label : public Widget
 {
 public:
-	Label();
+	Label(std::string text, TextAlignment HAlign = TEXTALIGN_CENTER, TextAlignment VAlign = TEXTALIGN_CENTER);
 	void setText(std::string text);
 	void setSize(ktftd::img::FontSize size);
 	void setHAlign(TextAlignment alignment);
 	void setVAlign(TextAlignment alignment);
 	virtual void draw(int offsetX, int offsetY, int sizeX, int sizeY);
+	TextAlignment HAlign, VAlign;
+	std::string text;
 };
 
 class Button : public Widget
 {
 public:
-	Button(std::shared_ptr<Label> text);
+	Button(std::string text);
 	void setOnMouseDown(std::function<void ()> fn);
 	void setOnMouseUp(std::function<void ()> fn);
 
@@ -102,6 +104,9 @@ public:
 	std::function<void()> mouseUpFn;
 
 	virtual void draw(int offsetX, int offsetY, int sizeX, int sizeY);
+	virtual void SendEvent(Event event);
+	std::shared_ptr<Label> text;
+	bool pressed;
 };
 
 class Window
@@ -112,6 +117,8 @@ public:
 	void setBackground(ktftd::img::PaletteImage &image, ktftd::img::Palette &palette);
 
 	void draw(int screenSizeX, int screenSizeY);
+
+	void SendEvent(Event event);
 
 	int posX, posY, sizeX, sizeY;
 	bool border;
