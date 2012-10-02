@@ -22,7 +22,7 @@
 #include "gfx.hpp"
 
 #include <set>
-#include <stack>
+#include <list>
 #include <functional>
 
 namespace ktftd
@@ -30,11 +30,27 @@ namespace ktftd
 namespace ui
 {
 
+class Event
+{
+public:
+	enum EventType
+	{
+	EVENT_MOUSEDOWN,
+	EVENT_MOUSEUP,
+	EVENT_KEYDOWN,
+	};
+
+	EventType type;
+	int keycode;
+	int mouseX, mouseY;
+};
+
 class Widget
 {
 public:
 	virtual void draw(int offsetX, int offsetY, int sizeX, int sizeY) = 0;
 	virtual ~Widget() = 0;
+	virtual void SendEvent(Event &event);
 
 };
 
@@ -91,7 +107,7 @@ public:
 class Window
 {
 public:
-	Window(int posX, int posY, int sizeX, int sizeY) : posX(posX),posY(posY),sizeX(sizeX),sizeY(sizeY),border(true){}
+	Window(int posX, int posY, int sizeX, int sizeY) : posX(posX),posY(posY),sizeX(sizeX),sizeY(sizeY),border(true),scale(false){}
 	void setBackground(ktftd::img::RGBAColor color);
 	void setBackground(ktftd::img::Image &image);
 
@@ -99,6 +115,7 @@ public:
 
 	int posX, posY, sizeX, sizeY;
 	bool border;
+	bool scale;
 
 	std::shared_ptr<Widget> child;
 	std::shared_ptr<ktftd::gfx::Texture> winTexture;
@@ -107,7 +124,7 @@ public:
 class Dialogue : public Window
 {
 public:
-	Dialogue(int posX, int posY, int sizeX, int sizeY);
+	Dialogue(int posX, int posY, int sizeX, int sizeY) : Window(posX, posY, sizeX, sizeY){};
 
 
 };
@@ -117,7 +134,7 @@ class UIManager
 public:
 	UIManager(int sizeX, int sizeY) : sizeX(sizeX),sizeY(sizeY){}
 	std::set<std::shared_ptr<Window> > windows;
-	std::stack<std::shared_ptr<Dialogue> > dialogueStack;
+	std::list<std::shared_ptr<Dialogue> > dialogueStack;
 	void draw();
 
 	int sizeX, sizeY;

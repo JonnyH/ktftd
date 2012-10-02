@@ -58,6 +58,10 @@ UIManager::draw()
 	{
 		win->draw(this->sizeX, this->sizeY);
 	}
+	for (auto dialogue: this->dialogueStack)
+	{
+		dialogue->draw(this->sizeX, this->sizeY);
+	}
 }
 
 

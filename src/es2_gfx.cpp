@@ -47,9 +47,17 @@ const std::string blitTexVertShaderSource =
 	"attribute vec2 a_position;\n" \
 	"attribute vec2 a_texcoord;\n" \
 	"varying vec2 v_texcoord;\n" \
+	"uniform bool scale;\n" \
 	"void main()\n" \
 	"{\n" \
-	" v_texcoord = a_texcoord;\n" \
+	" if (scale)\n" \
+	" {\n" \
+	"  v_texcoord = a_texcoord ;\n" \
+	" }\n" \
+	" else\n" \
+	" {\n" \
+	"  v_texcoord = a_position.xy / vec2(2.0,-2.0) +vec2(0.5, 0.5);\n" \
+	" }\n" \
 	" gl_Position = vec4(a_position.x,a_position.y,0,1);\n" \
 	"}\n";
 
@@ -141,6 +149,7 @@ ES2GFXDriver::ES2GFXDriver(SDL_GLContext ctx, int winSizeX, int winSizeY)
 	this->blitTexProgramInfo.program = LinkProgram(blitTexVertShader, blitTexFragShader);
 
 	this->blitTexProgramInfo.samplerUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_sampler");
+	this->blitTexProgramInfo.scaleUniform = glGetUniformLocation(this->blitTexProgramInfo.program, "u_scale");
 	this->blitTexProgramInfo.texcoordAttrib = glGetAttribLocation(this->blitTexProgramInfo.program, "a_texcoord");
 	this->blitTexProgramInfo.positionAttrib = glGetAttribLocation(this->blitTexProgramInfo.program, "a_position");
 	
@@ -211,7 +220,7 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, ktftd::img::RGB
 }
 
 void
-ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
+ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex, bool scale)
 {
 	ES2Texture &es2Tex = static_cast<ES2Texture&>(tex);
 	float x1, x2, y1, y2;
@@ -254,6 +263,15 @@ ES2GFXDriver::DrawRect(int posX, int posY, int sizeX, int sizeY, Texture &tex)
 	glEnableVertexAttribArray(this->blitTexProgramInfo.texcoordAttrib);
 	glVertexAttribPointer(this->blitTexProgramInfo.texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0][0]);
 	glUniform1i(this->blitTexProgramInfo.samplerUniform, 0);
+
+	if (scale)
+	{
+		glUniform1i(this->blitTexProgramInfo.scaleUniform, 1);
+	}
+	else
+	{
+		glUniform1i(this->blitTexProgramInfo.scaleUniform, 0);
+	}
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
