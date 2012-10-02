@@ -24,6 +24,19 @@ namespace ktftd
 namespace ui
 {
 
+static bool PointIsWithinWindow(int pointX, int pointY, int winOffsetX, int winOffsetY, int winSizeX, int winSizeY)
+{
+	if ( (pointX >= winOffsetX && pointX < (winOffsetX + winSizeX))
+		 &&(pointY >= winOffsetY && pointY < (winOffsetY + winSizeY)))
+	{
+		return true;
+	}
+	else
+	{	
+		return false;
+	}
+}
+
 void
 Window::setBackground(ktftd::img::PaletteImage &img, ktftd::img::Palette &palette)
 {
@@ -65,7 +78,17 @@ Window::SendEvent(Event event)
 {
 	if (this->child)
 	{
-		this->child->SendEvent(event);
+		if (this->border)
+		{
+			if (PointIsWithinWindow(event.mouseX, event.mouseY, this->posX+6, this->posY+6, this->sizeX-12, this->sizeY-12))
+			{
+				this->child->SendEvent(event);
+			}
+		}
+		else
+		{
+			this->child->SendEvent(event);
+		}
 	}
 }
 
@@ -163,19 +186,6 @@ UIManager::draw()
 	for (auto dialogue: this->dialogueStack)
 	{
 		dialogue->draw(this->sizeX, this->sizeY);
-	}
-}
-
-bool PointIsWithinWindow(int pointX, int pointY, int winOffsetX, int winOffsetY, int winSizeX, int winSizeY)
-{
-	if ( (pointX >= winOffsetX && pointX < (winOffsetX + winSizeX))
-	   &&(pointY >= winOffsetY && pointY < (winOffsetY + winSizeY)))
-	{
-		return true;
-	}
-	else
-	{	
-		return false;
 	}
 }
 
