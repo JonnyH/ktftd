@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  audio.hpp
+ *       Filename:  sdlaudio.hpp
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  28/09/12 09:40:48
+ *        Created:  03/10/12 08:14:14
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,40 +16,34 @@
  * =====================================================================================
  */
 
-#ifndef __AUDIO_HPP
-#define __AUDIO_HPP
+#ifndef __SDLAUDIO_HPP
+#define __SDLAUDIO_HPP
+
+#include "audio.hpp"
 
 #include <cstdint>
 #include <vector>
+#include <SDL.h>
 
 namespace ktftd
 {
 namespace audio
 {
+namespace SDL
+{
 
-class AudioFile
+class SDLAudioDriver : public AudioDriver
 {
 public:
-	int sampleRate;
-	uint32_t sampleCount;
-	uint32_t channels;
-	uint32_t bitsPerSample;
-	std::vector<char*> channelSamples;
-	bool isSignedPCM;
-	void writeFLAC(const char* fileName);
+	SDLAudioDriver();
+	virtual ~SDLAudioDriver();
+	virtual void PlaySample(AudioFile &audioFile);
+	std::vector<int16_t> sampleBuffer;
+	SDL_AudioSpec obtainedAudioSpec;
 };
 
-class AudioDriver
-{
-public:
-
-	virtual void PlaySample(AudioFile &audioFile) = 0;
-
-	static AudioDriver& getAudioDriver();
-	static void setAudioDriver(AudioDriver *drv);
-};
-
+}//namespace SDL
 }//namespace audio
 }//namespace ktftd
 
-#endif //__AUDIO_HPP
+#endif //__SDLAUDIO_HPP

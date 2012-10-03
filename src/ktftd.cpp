@@ -3,6 +3,7 @@
 #include "scr.hpp"
 #include "xcui.hpp"
 #include "es2_gfx.hpp"
+#include "sdlaudio.hpp"
 
 
 
@@ -20,8 +21,11 @@ int main(int argc, char **argv)
 	auto ctx = SDL_GL_CreateContext(window);
 
 	auto *gfxDriver = new ktftd::gfx::ES2::ES2GFXDriver(ctx, 640, 400);
-
 	ktftd::gfx::GFXDriver::setGFXDriver(gfxDriver);
+
+	auto *audioDriver = new ktftd::audio::SDL::SDLAudioDriver();
+	ktftd::audio::AudioDriver::setAudioDriver(audioDriver);
+
 
 	ktftd::ui::UIManager interface(640, 400);
 

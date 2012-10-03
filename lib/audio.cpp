@@ -68,5 +68,19 @@ AudioFile::writeFLAC(const char* fileName)
 	delete[] interleavedBuffer;
 }
 
+static AudioDriver *g_driver = NULL;
+
+AudioDriver&
+AudioDriver::getAudioDriver()
+{
+	return *g_driver;
+}
+
+void
+AudioDriver::setAudioDriver(AudioDriver *drv)
+{
+	g_driver = drv;
+}
+
 }//namespace audio
 }//namespace ktftd
