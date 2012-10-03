@@ -19,6 +19,9 @@
 #include "sdlaudio.hpp"
 #include <SDL.h>
 #include <iostream>
+#include <memory>
+#include <cassert>
+#include <samplerate.h>
 
 namespace ktftd
 {
@@ -65,10 +68,83 @@ SDLAudioDriver::~SDLAudioDriver()
 
 }
 
-static void* convertAudio(void* sourceBuffer, int sourceSampleCount, int sourceFreq, int sourceBits, bool sourceIsSigned,
+static void* convertAudio(void* srcBuffer, int srcSampleCount, int srcFreq, int srcBits, bool srcIsSigned,
                              int &dstSampleCount, int dstFreq, int dstBits, bool dstIsSigned)
 {
-	return nullptr;
+	std::unique_ptr<float[]> srcFloatBuffer, dstFloatBuffer;
+	srcFloatBuffer = std::unique_ptr<float[]>(new float[srcSampleCount]);
+	void* outputBuffer = nullptr;
+
+	switch (srcBits)
+	{
+		case 8:
+		{
+			if (srcIsSigned)
+			{
+				int8_t *i8SrcBuffer = static_cast<int8_t*>(srcBuffer);
+				for (int i = 0; i < srcSampleCount; i++)
+				{
+					srcFloatBuffer[i] = (float)i8SrcBuffer[i] / 127.0f;
+				}
+			}
+			else
+			{
+				assert(0);
+			}
+			break;
+		}
+		default:
+			assert(0);
+	}
+
+	double resampleRatio = (double)dstFreq/(double)srcFreq;
+
+	dstSampleCount = srcSampleCount*resampleRatio;
+
+	dstFloatBuffer = std::unique_ptr<float[]>(new float[dstSampleCount]);
+
+	SRC_DATA resampleSrc;
+	resampleSrc.data_in = srcFloatBuffer.get();
+	resampleSrc.data_out = dstFloatBuffer.get();
+	resampleSrc.input_frames = srcSampleCount;
+	resampleSrc.output_frames = dstSampleCount;
+	resampleSrc.src_ratio = resampleRatio;
+
+	int ret = src_simple(&resampleSrc, SRC_SINC_BEST_QUALITY, 1);
+
+	if (ret != 0)
+	{
+		std::cerr << "Failed to resample data, error: " << src_strerror(ret) << std::endl;
+		return nullptr;
+	}
+
+	assert(resampleSrc.output_frames_gen == dstSampleCount);
+	assert(resampleSrc.input_frames_used == srcSampleCount);
+
+	switch (dstBits)
+	{
+		case 16:
+		{
+			if (dstIsSigned)
+			{
+				int16_t* dstBuffer = new int16_t[dstSampleCount];
+				for (int i = 0; i < dstSampleCount; i++)
+				{
+					dstBuffer[i] = dstFloatBuffer[i]*(1<<15);
+				}
+				outputBuffer = dstBuffer;
+			}
+			else
+			{
+				assert(0);
+			}
+			break;
+		}
+		default:
+			assert(0);
+	}
+
+	return outputBuffer;
 }
 
 void
