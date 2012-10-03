@@ -1,0 +1,11 @@
+.gitignore
+TFD
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+ktftd
+ktftdimg
+ktftdvid
+ktftdsnd
+*.a
