@@ -106,6 +106,7 @@ namespace img
 		uint32_t sizeX, sizeY, startASCII;
 		uint32_t endASCII;
 		std::vector<PaletteImage> characterImages;
+		PaletteImage RenderText(std::string &text);
 	};
 
 	Palette LoadPalette(std::istream &inStream, int paletteNo);

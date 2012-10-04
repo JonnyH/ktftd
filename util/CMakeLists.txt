@@ -10,6 +10,10 @@ option (BUILD_KTFTDSND
 				"Build ktftdsnd - a tool for loading and converting tftd audio
 				resources" ON)
 
+option (BUILD_KTFTDTEXT
+				"Build ktftdtext - a tool for rendering strings using tftd font
+				resources" ON)
+
 if (BUILD_KTFTDIMG)
 	set (KTFTDIMG_SOURCE_FILES
 					img.cpp)
@@ -30,3 +34,10 @@ if (BUILD_KTFTDSND)
 	add_executable(ktftdsnd ${KTFTDSND_SOURCE_FILES})
 	target_link_libraries(ktftdsnd ktftdutil)
 endif(BUILD_KTFTDSND)
+
+if (BUILD_KTFTDTEXT)
+set (KTFTDTEXT_SOURCE_FILES
+	text.cpp)
+add_executable(ktftdtext ${KTFTDTEXT_SOURCE_FILES})
+target_link_libraries(ktftdtext ktftdutil)
+endif(BUILD_KTFTDTEXT)

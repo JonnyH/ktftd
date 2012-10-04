@@ -108,5 +108,27 @@ namespace img
 		}
 		return img;
 	}
+
+PaletteImage
+PaletteFont::RenderText(std::string &text)
+{
+	int outSizeX = text.length() * this->sizeX;
+	int outSizeY = this->sizeY;
+
+	PaletteImage image(outSizeX, outSizeY);
+
+	for (int c = 0; c < text.length(); c++)
+	{
+		auto &charImage = this->characterImages[text[c] - this->startASCII];
+		for (int y = 0; y < this->sizeY; y++)
+		{
+			int offset = (y*outSizeX) + (c*this->sizeX);
+			memcpy(&image.data[offset], &charImage.data[this->sizeX*y], this->sizeX);
+		}
+	}
+	return image;
+
+}
+
 }//namespace img
 }//namespace ktftd
