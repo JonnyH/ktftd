@@ -56,6 +56,11 @@ AudioFile::writeFLAC(const char* fileName)
 					bufferPos++;
 					break;
 				}
+				case 16:
+				{
+					int32_t sampleValue = this->isSignedPCM ? ((int16_t*)this->channelSamples[c])[s] : ((uint16_t*)this->channelSamples[c])[s] - (1<<15);
+					*bufferPos++ = sampleValue;
+				}
 				default:
 					assert(0);
 			}
