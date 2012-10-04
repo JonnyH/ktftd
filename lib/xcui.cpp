@@ -24,6 +24,24 @@ namespace ktftd
 namespace ui
 {
 
+ktftd::img::RGBAColor uiPalette[5] =
+{
+	{74, 105,148},
+	{82, 105,148},
+	{132,130,181},
+	{189,186,214},
+	{231,227,231},
+};
+
+ktftd::img::RGBAColor uiPaletteSelected[5] =
+{
+	{41, 56, 198},
+	{49, 56, 198},
+	{74, 73, 214},
+	{99, 97, 231},
+	{123,121,239}
+};
+
 static bool PointIsWithinWindow(int pointX, int pointY, int winOffsetX, int winOffsetY, int winSizeX, int winSizeY)
 {
 	if ( (pointX >= winOffsetX && pointX < (winOffsetX + winSizeX))
@@ -50,16 +68,11 @@ Window::draw(int screenSizeX, int screenSizeY)
 	if (this->border)
 	{
 		//FIXME: More efficient method of drawing border than 5*full-window quads
-		ktftd::img::RGBAColor color(127, 127, 127);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX, this->posY, this->sizeX, this->sizeY, color);
-		color = ktftd::img::RGBAColor(188, 188, 188);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+1, this->posY+1, this->sizeX-2, this->sizeY-2, color);
-		color = ktftd::img::RGBAColor(255, 255, 255);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+2, this->posY+2, this->sizeX-4, this->sizeY-4, color);
-		color = ktftd::img::RGBAColor(188, 188, 188);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+3, this->posY+3, this->sizeX-6, this->sizeY-6, color);
-		color = ktftd::img::RGBAColor(127, 127, 127);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+4, this->posY+4, this->sizeX-8, this->sizeY-8, color);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX, this->posY, this->sizeX, this->sizeY, uiPalette[2]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+1, this->posY+1, this->sizeX-2, this->sizeY-2, uiPalette[3]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+2, this->posY+2, this->sizeX-4, this->sizeY-4, uiPalette[4]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+3, this->posY+3, this->sizeX-6, this->sizeY-6, uiPalette[3]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+4, this->posY+4, this->sizeX-8, this->sizeY-8, uiPalette[2]);
 
 	}
 	ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(this->posX+5, this->posY+5, this->sizeX-10, this->sizeY-10, *this->winTexture.get(), *this->winPalette.get());
@@ -95,23 +108,17 @@ Window::SendEvent(Event event)
 void
 Button::draw(int offsetX, int offsetY, int sizeX, int sizeY)
 {
-	if (this->pressed)
+	if (!this->pressed)
 	{
-		ktftd::img::RGBAColor color(188,188,188);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX, offsetY, sizeX, sizeY, color);
-		color = ktftd::img::RGBAColor(127,127,127);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+1, offsetY+1, sizeX-2, sizeY-2, color);
-		color = ktftd::img::RGBAColor(100,100,100);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+2, offsetY+2, sizeX-4, sizeY-4, color);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX, offsetY, sizeX, sizeY, uiPalette[4]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+1, offsetY+1, sizeX-2, sizeY-2, uiPalette[3]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+2, offsetY+2, sizeX-4, sizeY-4, uiPalette[2]);
 	}
 	else
 	{
-		ktftd::img::RGBAColor color(230,230,230);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX, offsetY, sizeX, sizeY, color);
-		color = ktftd::img::RGBAColor(188,188,188);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+1, offsetY+1, sizeX-2, sizeY-2, color);
-		color = ktftd::img::RGBAColor(127,127,127);
-		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+2, offsetY+2, sizeX-4, sizeY-4, color);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX, offsetY, sizeX, sizeY, uiPaletteSelected[4]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+1, offsetY+1, sizeX-2, sizeY-2, uiPaletteSelected[3]);
+		ktftd::gfx::GFXDriver::getGFXDriver().DrawRect(offsetX+2, offsetY+2, sizeX-4, sizeY-4, uiPaletteSelected[2]);
 	}
 
 	this->text->draw(offsetX+3, offsetY+3, sizeX-6, sizeY-6);
