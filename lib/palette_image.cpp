@@ -113,10 +113,10 @@ PaletteImage
 PaletteFont::RenderText(std::string &text)
 {
 	int outSizeX =0;
-	for (int c = 0;c < text.length();c++)
+	for (unsigned int c = 0;c < text.length();c++)
 	{
-		assert(text[c] >= this->startASCII);
-		assert(text[c] < this->endASCII);
+		assert((uint8_t)text[c] >= this->startASCII);
+		assert((uint8_t)text[c] < this->endASCII);
 		outSizeX += this->characterImages[text[c] - this->startASCII].sizeX;
 	}
 	int outSizeY = this->sizeY;
@@ -124,10 +124,10 @@ PaletteFont::RenderText(std::string &text)
 	PaletteImage image(outSizeX, outSizeY);
 	int charPos = 0;
 
-	for (int c = 0; c < text.length(); c++)
+	for (unsigned int c = 0; c < text.length(); c++)
 	{
 		auto &charImage = this->characterImages[text[c] - this->startASCII];
-		for (int y = 0; y < this->sizeY; y++)
+		for (unsigned int y = 0; y < this->sizeY; y++)
 		{
 			int offset = (y*outSizeX) + (charPos);
 			memcpy(&image.data[offset], &charImage.data[charImage.sizeX*y], charImage.sizeX);

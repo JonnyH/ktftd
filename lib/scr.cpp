@@ -81,7 +81,7 @@ namespace img
 				}
 				char *imageBuffer = new char[maxXUsed * font.sizeY];
 
-				for (int y = 0; y < font.sizeY; y++)
+				for (unsigned int y = 0; y < font.sizeY; y++)
 				{
 					memcpy(&imageBuffer[y * maxXUsed], &readBuffer[y*font.sizeX], maxXUsed);
 				}

@@ -38,7 +38,7 @@ static void
 CallBack(void* userData, uint8_t *stream, int length)
 {
 	auto driver = static_cast<SDLAudioDriver*>(userData);
-	int sampleBufferLength = MIN(length, driver->sampleBuffer.size()*2);
+	int sampleBufferLength = MIN(length, (int)driver->sampleBuffer.size()*2);
 	if (sampleBufferLength > 0)
 		memcpy(stream, &driver->sampleBuffer[0], sampleBufferLength);
 	int remainingLength = length - sampleBufferLength;
@@ -169,7 +169,7 @@ SDLAudioDriver::PlaySample(AudioFile &file)
 
 	{
 		SDL_LockAudio();
-		if (this->sampleBuffer.size() < sampleCount)
+		if ((int)this->sampleBuffer.size() < sampleCount)
 		{
 			this->sampleBuffer.resize(sampleCount);
 		}
