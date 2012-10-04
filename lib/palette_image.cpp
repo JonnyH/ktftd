@@ -112,19 +112,27 @@ namespace img
 PaletteImage
 PaletteFont::RenderText(std::string &text)
 {
-	int outSizeX = text.length() * this->sizeX;
+	int outSizeX =0;
+	for (int c = 0;c < text.length();c++)
+	{
+		assert(text[c] >= this->startASCII);
+		assert(text[c] < this->endASCII);
+		outSizeX += this->characterImages[text[c] - this->startASCII].sizeX;
+	}
 	int outSizeY = this->sizeY;
 
 	PaletteImage image(outSizeX, outSizeY);
+	int charPos = 0;
 
 	for (int c = 0; c < text.length(); c++)
 	{
 		auto &charImage = this->characterImages[text[c] - this->startASCII];
 		for (int y = 0; y < this->sizeY; y++)
 		{
-			int offset = (y*outSizeX) + (c*this->sizeX);
-			memcpy(&image.data[offset], &charImage.data[this->sizeX*y], this->sizeX);
+			int offset = (y*outSizeX) + (charPos);
+			memcpy(&image.data[offset], &charImage.data[charImage.sizeX*y], charImage.sizeX);
 		}
+		charPos += charImage.sizeX;
 	}
 	return image;
 
