@@ -23,7 +23,7 @@ endif (BUILD_KTFTDIMG)
 
 if (BUILD_KTFTDVID)
 	set (KTFTDVID_SOURCE_FILES
-					flc.cpp)
+					vid.cpp)
 	add_executable(ktftdvid ${KTFTDVID_SOURCE_FILES})
 	target_link_libraries(ktftdvid ktftdutil)
 endif (BUILD_KTFTDVID)

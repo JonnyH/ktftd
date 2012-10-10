@@ -13,21 +13,21 @@ int main(int argc, char **argv)
 	bool quit = false;
 
 
-	auto *window = SDL_CreateWindow("KTFTD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_OPENGL);
+	auto *window = SDL_CreateWindow("KTFTD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 200, SDL_WINDOW_OPENGL);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,0);
 
 	auto ctx = SDL_GL_CreateContext(window);
 
-	auto *gfxDriver = new ktftd::gfx::ES2::ES2GFXDriver(ctx, 640, 400);
+	auto *gfxDriver = new ktftd::gfx::ES2::ES2GFXDriver(ctx, 320, 200);
 	ktftd::gfx::GFXDriver::setGFXDriver(gfxDriver);
 
 	auto *audioDriver = new ktftd::audio::SDL::SDLAudioDriver();
 	ktftd::audio::AudioDriver::setAudioDriver(audioDriver);
 
 
-	ktftd::ui::UIManager interface(640, 400);
+	ktftd::ui::UIManager interface(320, 200);
 
 	std::ifstream backgroundImageStream("./TFD/GEOGRAPH/BACK05.SCR");
 	std::ifstream background2ImageStream("./TFD/GEOGRAPH/BACK05.SCR");
@@ -38,13 +38,13 @@ int main(int argc, char **argv)
 	auto background2Image= ktftd::img::LoadSCRImage(background2ImageStream);
 
 
-	auto backgroundWindow = std::shared_ptr<ktftd::ui::Window>(new ktftd::ui::Window(0, 0, 640, 400));
+	auto backgroundWindow = std::shared_ptr<ktftd::ui::Window>(new ktftd::ui::Window(0, 0, 320, 200));
 
 	backgroundWindow->setBackground(backgroundImage, backgroundImagePalette);
 
 	interface.windows.insert(backgroundWindow);
 
-	auto dialogue = std::shared_ptr<ktftd::ui::Dialogue>(new ktftd::ui::Dialogue(50, 50, 540, 300));
+	auto dialogue = std::shared_ptr<ktftd::ui::Dialogue>(new ktftd::ui::Dialogue(25, 25, 270, 150));
 	dialogue->border = true;
 	dialogue->setBackground(background2Image, backgroundImagePalette);
 

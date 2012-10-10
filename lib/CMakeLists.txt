@@ -9,6 +9,7 @@ set(KTFTDUTIL_SOURCE_FILES
 				audio.cpp
 				xcui.cpp
 				gfx.cpp
+				flc.cpp
 )
 
 add_library(ktftdutil ${KTFTDUTIL_SOURCE_FILES})
