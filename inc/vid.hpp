@@ -32,7 +32,7 @@ class Frame
 public:
 	virtual ktftd::audio::AudioFile &getAudioFile() = 0;
 	virtual ktftd::img::Image &getImage() = 0;
-	virtual ~Frame() = 0;
+	virtual ~Frame();
 	virtual int getFrameTime() = 0;
 };
 
@@ -45,7 +45,7 @@ public:
 	virtual Frame& getNextFrame() = 0;
 	virtual int getFrameHeight() = 0;
 	virtual int getFrameWidth() = 0;
-	virtual ~Video() = 0;
+	virtual ~Video();
 };
 
 };//namespace vid

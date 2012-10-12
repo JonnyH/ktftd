@@ -27,7 +27,7 @@ public:
 	virtual ktftd::audio::AudioFile &getAudioFile(){return this->audio;};
 	virtual ktftd::img::Image &getImage(){return this->image;};
 	virtual int getFrameTime(){return this->frameTime;};
-	virtual ~FLCFrame(){};
+	virtual ~FLCFrame();
 
 	ktftd::img::Image image;
 	ktftd::audio::AudioFile audio;
@@ -60,6 +60,56 @@ private:
 Video* loadFLC(std::istream &inStream)
 {
 	return new FLCVideo(inStream);
+}
+
+FLCVideo::FLCVideo(std::istream &inStream)
+	: inStream(inStream)
+{
+
+}
+
+int
+FLCVideo::getFrameNo()
+{
+	return this->frameNumber;
+}
+
+int
+FLCVideo::getTotalFrameCount()
+{
+	return this->frameCount;
+}
+
+int
+FLCVideo::getFrameHeight()
+{
+	return this->frameHeight;
+}
+
+int FLCVideo::getFrameWidth()
+{
+	return this->frameWidth;
+}
+
+bool FLCVideo::hasNextFrame()
+{
+
+}
+
+Frame& FLCVideo::getNextFrame()
+{
+
+}
+
+FLCVideo::~FLCVideo()
+{
+
+}
+
+
+FLCFrame::~FLCFrame()
+{
+
 }
 
 };//namespace vid
